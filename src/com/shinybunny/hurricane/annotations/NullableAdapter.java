@@ -1,6 +1,6 @@
 package com.shinybunny.hurricane.annotations;
 
-import com.shinybunny.hurricane.CommandAPI;
+import com.shinybunny.hurricane.Hurricane;
 import com.shinybunny.hurricane.CommandExecutionContext;
 import com.shinybunny.hurricane.CommandRegisteringContext;
 import com.shinybunny.hurricane.tree.ParameterArgument;
@@ -25,6 +25,6 @@ public class NullableAdapter implements ParamAnnotationAdapter<Nullable> {
 
     @Override
     public boolean canApply(Nullable instance, ParameterArgument container, CommandRegisteringContext ctx) {
-        return !CommandAPI.PRIMITIVES_TO_WRAPPERS.containsValue(container.getType());
+        return !Hurricane.PRIMITIVES_TO_WRAPPERS.containsValue(container.getType());
     }
 }

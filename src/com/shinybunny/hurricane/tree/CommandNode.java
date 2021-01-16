@@ -32,7 +32,7 @@ public class CommandNode extends CustomDataHolder {
         return children;
     }
 
-    public List<? extends CommandNode> getRelevantNodes(CommandAPI api, InputReader reader) {
+    public List<? extends CommandNode> getRelevantNodes(Hurricane api, InputReader reader) {
         if (children.size() > argChildren.size()) {
             for (CommandNode child : children) {
                 if (!(child instanceof Argument)) {

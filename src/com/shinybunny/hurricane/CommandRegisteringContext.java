@@ -7,14 +7,14 @@ import java.util.List;
 
 public class CommandRegisteringContext {
 
-    private CommandAPI api;
+    private Hurricane api;
     private CommandContainer container;
     private String command;
     private boolean allowMoreArgs = true;
     private boolean cancelled;
     private List<CommandRegisterFailedException> errors = new ArrayList<>();
 
-    public CommandRegisteringContext(CommandAPI api, CommandContainer container, String command) {
+    public CommandRegisteringContext(Hurricane api, CommandContainer container, String command) {
         this.api = api;
         this.container = container;
         this.command = command;
@@ -24,7 +24,7 @@ public class CommandRegisteringContext {
         return command;
     }
 
-    public CommandAPI getApi() {
+    public Hurricane getApi() {
         return api;
     }
 

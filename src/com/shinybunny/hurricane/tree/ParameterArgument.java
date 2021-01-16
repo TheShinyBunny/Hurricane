@@ -1,7 +1,7 @@
 package com.shinybunny.hurricane.tree;
 
 import com.shinybunny.hurricane.Argument;
-import com.shinybunny.hurricane.CommandAPI;
+import com.shinybunny.hurricane.Hurricane;
 import com.shinybunny.hurricane.CommandExecutionContext;
 import com.shinybunny.hurricane.CommandRegisteringContext;
 import com.shinybunny.hurricane.annotations.AnnotationAdapter;
@@ -19,7 +19,7 @@ import java.util.List;
  * Represents an {@link Argument} created from a method {@link Parameter}.
  * <br/>
  * Parameter arguments are different from normal arguments as they can use custom annotations.
- * Each annotation attached to the parameter uses a registered {@link ParamAnnotationAdapter} from the {@link CommandAPI}.
+ * Each annotation attached to the parameter uses a registered {@link ParamAnnotationAdapter} from the {@link Hurricane}.
  * These adapters can listen to the annotation being attached to a ParameterArgument, and modify the argument's behavior.
  */
 public class ParameterArgument extends Argument implements AnnotationAdapterContainer<ParamAnnotationAdapter> {

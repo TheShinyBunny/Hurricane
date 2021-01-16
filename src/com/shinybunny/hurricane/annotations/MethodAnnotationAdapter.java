@@ -12,7 +12,7 @@ import java.util.List;
  * An {@link AnnotationAdapter} for annotations declared on {@link MethodCommand method commands}.
  * This adapter can modify the behavior of the executed command or its settings when registered.
  * <br/>
- * Custom MethodAnnotationAdapters can be registered to an API with {@link CommandAPI#addMethodAnnotationAdapter(MethodAnnotationAdapter)}
+ * Custom MethodAnnotationAdapters can be registered to an API with {@link Hurricane#addMethodAnnotationAdapter(MethodAnnotationAdapter)}
  * @param <A> The type of the annotation
  */
 public interface MethodAnnotationAdapter<A extends Annotation> extends AnnotationAdapter<A,MethodCommand> {

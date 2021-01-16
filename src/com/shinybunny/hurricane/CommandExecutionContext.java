@@ -7,13 +7,13 @@ import java.util.*;
 
 public class CommandExecutionContext extends CustomDataHolder {
 
-    private CommandAPI api;
+    private Hurricane api;
     private final CommandSender sender;
     private InputReader reader;
     private Map<String, ParsedArgument> arguments;
     private CommandExecutor executor;
 
-    public CommandExecutionContext(CommandAPI api, CommandSender sender, InputReader reader, CommandExecutor executor) {
+    public CommandExecutionContext(Hurricane api, CommandSender sender, InputReader reader, CommandExecutor executor) {
         this.api = api;
         this.sender = sender;
         this.reader = reader;
@@ -29,7 +29,7 @@ public class CommandExecutionContext extends CustomDataHolder {
         return reader;
     }
 
-    public CommandAPI getApi() {
+    public Hurricane getApi() {
         return api;
     }
 

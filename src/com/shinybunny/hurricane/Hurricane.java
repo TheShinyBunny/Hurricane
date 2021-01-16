@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * To register commands, call {@link #register(Object)} with a holder class for multiple method commands,
  * or call {@link #register(CommandNode)} with a built command instance.
  */
-public class CommandAPI {
+public class Hurricane {
 
     private List<ParamAnnotationAdapter<?>> paramAnnotationAdapters = new ArrayList<>();
     private List<MethodAnnotationAdapter<?>> methodAnnotationAdapters = new ArrayList<>();
@@ -33,11 +33,11 @@ public class CommandAPI {
 
     private Predicate<CommandNode> commandConsumer;
 
-    public CommandAPI() {
+    public Hurricane() {
         this(true);
     }
 
-    public CommandAPI(boolean literalsIgnoreCase) {
+    public Hurricane(boolean literalsIgnoreCase) {
         this.literalsIgnoreCase = literalsIgnoreCase;
         initDefaults();
     }
@@ -51,7 +51,7 @@ public class CommandAPI {
     }
 
     public static void main(String[] args) {
-        CommandAPI api = new CommandAPI();
+        Hurricane api = new Hurricane();
         api.register(ExampleCommands.class);
 
         String input = "";

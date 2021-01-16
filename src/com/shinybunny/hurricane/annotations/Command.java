@@ -1,6 +1,6 @@
 package com.shinybunny.hurricane.annotations;
 
-import com.shinybunny.hurricane.CommandAPI;
+import com.shinybunny.hurricane.Hurricane;
 import com.shinybunny.hurricane.CommandContainer;
 
 import java.lang.annotation.ElementType;
@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * This annotation should be used on any method that should be registered as a command inside of a {@link CommandContainer}.
  * Any other method without this annotation will not be interpreted as a command in the API.
  * <br/>
- * This annotation can be used inside command containers to mark an inner class as a tree command (see {@link CommandAPI#register(Object)}
+ * This annotation can be used inside command containers to mark an inner class as a tree command (see {@link Hurricane#register(Object)}
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD,ElementType.TYPE})

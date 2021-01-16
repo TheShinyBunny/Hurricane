@@ -29,7 +29,7 @@ public class Argument extends CommandNode {
 
     public Argument(String name, Class<?> type) {
         super(name);
-        this.type = CommandAPI.getPrimitiveWrapper(type);
+        this.type = Hurricane.getPrimitiveWrapper(type);
     }
 
     /**

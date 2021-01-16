@@ -17,7 +17,7 @@ public class CommandContainer {
     private Constructor instanceCtor;
     private List<ParameterArgument> instanceCtorArgs;
 
-    public CommandContainer(CommandAPI api, Object obj) {
+    public CommandContainer(Hurricane api, Object obj) {
         this.instance = obj instanceof Class ? null : obj;
         this.clazz = obj instanceof Class ? (Class<?>) obj : obj.getClass();
         if (instance == null) {
