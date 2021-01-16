@@ -1,0 +1,83 @@
+package com.shinybunny.cmdapi.annotations;
+
+import com.shinybunny.cmdapi.CommandExecutionContext;
+import com.shinybunny.cmdapi.CommandRegisteringContext;
+import com.shinybunny.cmdapi.tree.ParameterArgument;
+import com.shinybunny.cmdapi.util.Utils;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.InvocationTargetException;
+
+/**
+ * Defines a default value for an argument parameter. Using this annotation will make the argument optional,
+ * and provide the value specified in this annotation instead.
+ *
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.PARAMETER)
+@Adapter(Default.Adapter.class)
+public @interface Default {
+
+    int integer() default 0;
+
+    double doubleValue() default 0;
+
+    boolean bool() default false;
+
+    String string() default "";
+
+    /**
+     * A string representing the call path to a field of another argument to use as the value.
+     * <br/>
+     * For example, here is a command implementation of the {@link String#substring(int) String.substring()} method
+     * <pre>
+     * &#64;Command
+     * public void substring(String str, int start, @Default(computed = "str.length()") int end) {
+     *     str.substring(start,end);
+     * }
+     * </pre>
+     * Note that in order for the expression to recognize the name of the argument (in the case of the example, 'str'),
+     * parameter names need to be included in the compiled Java code, using the <code>-parameters</code> JVM argument.
+     * Otherwise, the name of the parameter argument will be arg0, arg1, arg2... according to its position in the signature.
+     */
+    String computed() default "";
+
+    class Adapter implements ParamAnnotationAdapter<Default> {
+
+        @Override
+        public Class<Default> getType() {
+            return Default.class;
+        }
+
+        @Override
+        public void init(Default instance, ParameterArgument container, CommandRegisteringContext ctx) {
+            container.setRequired(false);
+        }
+
+        @Override
+        public Object modify(Object value, Default annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+            if (value == null) {
+                if (!annotation.computed().isEmpty()) {
+                    return computeValue(annotation.computed(),ctx);
+                }
+                if (argument.getType() == Integer.class) return annotation.integer();
+                if (argument.getType() == Double.class) return annotation.doubleValue();
+                if (argument.getType() == Boolean.class) return annotation.bool();
+                if (argument.getType() == String.class) return annotation.string();
+            }
+            return value;
+        }
+
+        private Object computeValue(String expr, CommandExecutionContext ctx) throws Exception {
+            try {
+                return Utils.getArgumentValueMember(expr,ctx);
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | NoSuchFieldException e) {
+                throw new Exception("An error occurred while computing @Default value",e);
+            }
+        }
+    }
+
+}
