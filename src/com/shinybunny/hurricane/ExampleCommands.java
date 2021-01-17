@@ -8,13 +8,13 @@ import java.util.Random;
 public class ExampleCommands {
 
     @Command
-    @Feedback(value="Kicked user ${user.getName()} from the server for ${reason}!",fail="You have no permissions to use this command!")
+    @Feedback(success="Kicked user ${user.getName()} from the server for ${reason}!",fail="You have no permissions to use this command!")
     public static boolean kick(@Sender User sender, User user, @Default(string = "no apparent reason") @Greedy String reason) {
         return true;
     }
 
     @Command
-    @Feedback(value ="You rolled a %d!",fail = "Minimum number cannot be greater than the maximum number!")
+    @Feedback(success = "You rolled a %d!",fail = "Minimum number cannot be greater than the maximum number!")
     public static int dice(@Range(min = 1) @Default(integer = 1) int min,
                            @Range(min = 2) @Default(integer = 6) int max) {
         if (min > max) {
@@ -28,13 +28,13 @@ public class ExampleCommands {
     public static class Time {
 
         @Command
-        @Feedback("Set the time to ${ticks}")
+        @Feedback(success = "Set the time to ${ticks}")
         public static void set(int ticks) {
             System.out.println(">>> time is set to " + ticks);
         }
 
         @Command
-        @Feedback("Set the time to ${value.name()}")
+        @Feedback(success = "Set the time to ${value.name()}")
         public static void set(TimeValue value) {
             set(value.value);
         }

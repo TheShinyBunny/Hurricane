@@ -19,4 +19,21 @@ public interface CommandSender {
     default Object getDelegate() {
         return this;
     }
+
+    CommandSender CONSOLE = new CommandSender() {
+        @Override
+        public void sendMessage(String msg) {
+            System.out.println(msg);
+        }
+
+        @Override
+        public void success(String msg) {
+            System.out.println(msg);
+        }
+
+        @Override
+        public void fail(String msg) {
+            System.err.println(msg);
+        }
+    };
 }

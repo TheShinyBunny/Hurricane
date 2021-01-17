@@ -28,7 +28,7 @@ public class CommandContainer {
                     CommandRegisteringContext ctx = new CommandRegisteringContext(api, this, "");
                     for (int i = 0; i < c.getParameterCount(); i++) {
                         Parameter p = c.getParameters()[i];
-                        ParameterArgument arg = new ParameterArgument(api, p, i);
+                        ParameterArgument arg = new ParameterArgument(p, i);
                         arg.postInit(ctx);
                         instanceCtorArgs.add(arg);
                     }
