@@ -101,3 +101,5 @@ The `success` and `fail` messages can include the returned value with the `${res
 These annotations are used on parameters in a method command. They can modify the registration process, and the value parsed from the input.
 
 ### A list of some builtin Param Annotation Adapters:
+
+Soon™
