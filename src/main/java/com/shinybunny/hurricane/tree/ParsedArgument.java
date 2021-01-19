@@ -1,7 +1,5 @@
 package com.shinybunny.hurricane.tree;
 
-import com.shinybunny.hurricane.Argument;
-
 public class ParsedArgument {
 
     private Argument argument;
@@ -10,6 +8,11 @@ public class ParsedArgument {
     public ParsedArgument(Argument argument, Object value) {
         this.argument = argument;
         this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return argument + " = " + value;
     }
 
     public Argument getArgument() {

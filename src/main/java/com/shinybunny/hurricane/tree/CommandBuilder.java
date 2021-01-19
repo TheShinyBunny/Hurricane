@@ -1,6 +1,5 @@
 package com.shinybunny.hurricane.tree;
 
-import com.shinybunny.hurricane.Argument;
 import com.shinybunny.hurricane.CommandExecutor;
 import com.shinybunny.hurricane.CommandSender;
 

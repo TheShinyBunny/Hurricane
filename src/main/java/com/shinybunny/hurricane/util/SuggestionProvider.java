@@ -1,6 +1,6 @@
 package com.shinybunny.hurricane.util;
 
-import com.shinybunny.hurricane.Argument;
+import com.shinybunny.hurricane.tree.Argument;
 import com.shinybunny.hurricane.Hurricane;
 import com.shinybunny.hurricane.CommandSender;
 import com.shinybunny.hurricane.InputReader;

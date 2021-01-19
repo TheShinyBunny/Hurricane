@@ -1,11 +1,11 @@
 # Hurricane
-A rich command system API using methods. Just write a method, and the API will build a command for it from its paramters!
+A rich command system API using methods. Just write a method, and the API will build a command for it from its parameters!
 
 Easy to use, elegant and efficient!
 
 ## What do you mean?
 
-This API was created to make it easier to create commands for various projects needing a system to handle user or operator commands. Such systems are useful often in Discord bots and Minecraft plugins.
+This API was created to make it easier to create commands for various projects needing a system handling user or operator commands. Such systems are often useful in Discord bots and Minecraft plugins.
 
 For each Java method you give the API, it will generate a command, and when you pass it any input from the user, it will parse and execute the matching method with any additional arguments you define as the method parameters! It's almost like magic!
 
@@ -67,6 +67,10 @@ The API uses annotations to modify and validate the input in a fancier way than 
 
 Custom argument adapters can be used to react to different kinds of parameter types, and be able to parse them too!
 
+## An important note on parameter names
+
+When defining a parameter argument, its name defaults to the parameter's name, and this name is often used by error messages. Unless you compile your code with the `-parameters` flag, they default to `arg0`, `arg1` etc. To overcome this, either compile with that flag or use the [@Arg annotation](#arg).
+
 # Annotation Adapters
 
 An annotation adapter is a class defining the behavior of an annotation type when used on a command method or on a parameter in a command method.
@@ -81,11 +85,9 @@ These annotations are used on the methods themselves, and can modify their regis
 
 This annotation is necessary for each method you want to be automatically registered when registering its containing class.
 
-It can also be used to register tree commands, commands that have multiple sub-commands.
+It can also be used to register tree commands, commands that have multiple sub-commands, when used on the registered class or an inner class.
 
-Tree commands are defined with an inner class annotated with `@Command`, and all methods inside (with that annotation too) will be sub commands.
-
-This annotation can optionally change the name of a command from the method or class's name.
+This annotation can optionally change the name of a command from the method or class's name, and set a description for the command for providing help.
 
 ### `@Feedback`
 
@@ -93,8 +95,7 @@ When this annotation is used, after the method is executed it will send the send
 
 A failure of a command is when a method has been executed and threw an exception. Additionally, if the method returned the value `false`, it will be considered failed too. Any other return value, including `null` and `void` will be a success.
 
-The `success` and `fail` messages can include the returned value with the `${result}` pattern, and can include any parameter value with `${paramName}`. You can also chain simple calls to the value, for example:
-`${param.getSomething().field}`.
+The `success` and `fail` messages can include the returned value with the `${result}` pattern, and can include any parameter value with an [access expression](#access-expressions).
 
 ## Parameter Annotation Adapters
 
@@ -102,4 +103,19 @@ These annotations are used on parameters in a method command. They can modify th
 
 ### A list of some builtin Param Annotation Adapters:
 
-Soon™
+### `@Arg`
+
+Use this annotation on a parameter argument to set its name and/or description.
+An argument's name is defined by default to the parameter's name, but unless you compile your code with the `-parameters` flag, param names will be `arg0`, `arg1` etc. This annotation lets you define a meaningful name for the argument, so error feedback will be more understandable.
+
+## Access Expressions
+
+An access expression is used by `@Feedback` and `@Default` to get a value from a parameter in a method command. These expressions start with an argument's name (which can have spaces if defined with `@Arg`), followed by an optional chain of method calls and field accesses.
+
+Method calls cannot take any parameters at the moment, but in the future you may use literal values or nested access expressions.
+
+Some examples:
+- `arg0`
+- `arg1.getSomething()`
+- `myParam.myField.getStuff().otherField`
+- `param with spaces.getName()`

@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 public class CommandNode extends CustomDataHolder {
 
     protected String name;
+    protected String description = "";
     private List<CommandNode> children = new ArrayList<>();
     private List<Argument> argChildren = new ArrayList<>();
     private Predicate<CommandSender> requirement;
@@ -53,6 +54,7 @@ public class CommandNode extends CustomDataHolder {
     }
 
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
+        if (!reader.canRead()) return;
         int start = reader.getPos();
         if (reader.canRead(name.length())) {
             int end = start + name.length();
@@ -81,5 +83,21 @@ public class CommandNode extends CustomDataHolder {
 
     public CommandExecutor getExecutor() {
         return executor;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandNode{" +
+                "name='" + name + '\'' +
+                ", executable=" + (getExecutor() != null) +
+                "}";
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isSyntax() {
+        return true;
     }
 }

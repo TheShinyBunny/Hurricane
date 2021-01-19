@@ -1,30 +1,28 @@
 package com.shinybunny.hurricane.arguments;
 
 import com.shinybunny.hurricane.*;
-import com.shinybunny.hurricane.annotations.Greedy;
+import com.shinybunny.hurricane.tree.Argument;
 import com.shinybunny.hurricane.util.CommandParsingException;
 import com.shinybunny.hurricane.util.SuggestionConsumer;
 
-public class StringAdapter implements ArgumentAdapter<String> {
-    @Override
-    public Class<String> getType() {
-        return String.class;
-    }
-
+public class ContextAdapter implements ArgumentAdapter<CommandExecutionContext> {
     @Override
     public void init(Argument container, CommandRegisteringContext ctx) {
-
+        container.setSyntax(false);
     }
 
     @Override
-    public String parse(InputReader reader, CommandExecutionContext ctx, Argument argument) throws CommandParsingException {
-        if (argument.hasFlag(Greedy.FLAG))
-            return reader.readRest();
-        else return reader.readWord();
+    public CommandExecutionContext parse(InputReader reader, CommandExecutionContext ctx, Argument argument) throws CommandParsingException {
+        return ctx;
     }
 
     @Override
     public void suggest(InputReader reader, SuggestionConsumer suggestions, CommandSender sender, Argument arg) {
 
+    }
+
+    @Override
+    public Class<CommandExecutionContext> getType() {
+        return CommandExecutionContext.class;
     }
 }

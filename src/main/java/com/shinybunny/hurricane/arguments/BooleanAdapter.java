@@ -1,6 +1,7 @@
 package com.shinybunny.hurricane.arguments;
 
 import com.shinybunny.hurricane.*;
+import com.shinybunny.hurricane.tree.Argument;
 import com.shinybunny.hurricane.util.CommandParsingException;
 import com.shinybunny.hurricane.util.SuggestionConsumer;
 

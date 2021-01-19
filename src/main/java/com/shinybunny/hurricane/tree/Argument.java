@@ -1,9 +1,7 @@
-package com.shinybunny.hurricane;
+package com.shinybunny.hurricane.tree;
 
+import com.shinybunny.hurricane.*;
 import com.shinybunny.hurricane.arguments.ArgumentAdapter;
-import com.shinybunny.hurricane.tree.CommandNode;
-import com.shinybunny.hurricane.tree.MethodCommand;
-import com.shinybunny.hurricane.tree.ParsedArgument;
 import com.shinybunny.hurricane.util.*;
 
 import java.lang.annotation.Annotation;
@@ -12,7 +10,7 @@ import java.lang.annotation.Annotation;
  * A class representing an argument in a command.
  * <br/><br/>
  * An argument can be either syntax or non-syntax.
- * Syntax arguments are used as part of the command's input syntax, to translate the input string into the type of the argument.
+ * Syntax arguments are parsed from the command's input, to translate the input string into the type of the argument.
  * <br/>
  * Non-Syntax are used mainly for {@link MethodCommand}s, for additional parameters in a method that do not take part of the input parsing,
  * and are just a convenient way to pass data to the command implementation such as the {@link CommandSender sender}, the original input, the {@link CommandExecutionContext execution context}, etc.
@@ -114,17 +112,22 @@ public class Argument extends CommandNode {
     }
 
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
+        System.out.println("parsing argument " + this + " starting with: " + reader.peek());
         Object obj = getDefault(ctx);
         int start = reader.getPos();
-        if (reader.canRead()) {
-            try {
-                obj = adapter.parse(reader, ctx, this);
-            } catch (CommandParsingException e) {
-                if (e.getMarker() == null) {
-                    throw new CommandParsingException(e.getMessage(),e.getCause(),reader.markerSince(start));
-                } else {
-                    throw e;
+        if (syntax) {
+            if (reader.canRead()) {
+                try {
+                    obj = adapter.parse(reader, ctx, this);
+                } catch (CommandParsingException e) {
+                    if (e.getMarker() == null) {
+                        throw new CommandParsingException(e.getMessage(), e.getCause(), reader.markerSince(start));
+                    } else {
+                        throw e;
+                    }
                 }
+            } else if (ctx.getExecutor() == null) {
+                throw new CommandParsingException("Expected argument " + name);
             }
         }
         try {
@@ -154,7 +157,12 @@ public class Argument extends CommandNode {
 
     @Override
     public String toString() {
-        return "Argument(" + type.getSimpleName() + " " + name + ",required=" + required + ",syntax=" + syntax + ")";
+        return "Argument{" +
+                "type=" + type +
+                ", required=" + required +
+                ", name='" + name + '\'' +
+                ", executable=" + (getExecutor() != null) +
+                "}";
     }
 
     public String getSignature() {

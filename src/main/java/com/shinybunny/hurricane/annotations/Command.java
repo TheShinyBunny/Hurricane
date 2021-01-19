@@ -30,4 +30,6 @@ public @interface Command {
      */
     String value() default "";
 
+    String desc() default "";
+
 }

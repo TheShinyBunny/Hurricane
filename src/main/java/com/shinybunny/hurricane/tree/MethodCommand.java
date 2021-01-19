@@ -33,6 +33,7 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
         super(Utils.getName(method));
         this.method = method;
         this.container = container;
+        this.description = method.getAnnotation(Command.class).desc();
         this.annotationAdapters = resolveAnnotationAdapters(ctx);
         for (MethodAnnotationAdapter a : annotationAdapters) {
             try {
@@ -105,16 +106,21 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
 
     @Override
     public CommandResult<Object> execute(CommandExecutionContext ctx) {
+        System.out.println("performing execution of method command " + this);
         Object instance = Modifier.isStatic(method.getModifiers()) ? null : container.getInstance(ctx);
         Object[] args = new Object[method.getParameterCount()];
+        System.out.println("\tgathering arguments...");
         for (ParsedArgument arg : ctx.getArguments()) {
             Argument a = arg.getArgument();
             if (a instanceof ParameterArgument) {
+                System.out.println("\t\t[" + a.name + "] = " + arg.getValue());
                 args[((ParameterArgument) a).getIndex()] = arg.getValue();
             }
         }
+        System.out.println("\trunning preExecute...");
         for (MethodAnnotationAdapter a : annotationAdapters) {
             try {
+                System.out.println("\t\t" + a);
                 List<Object> tempArgs = new ArrayList<>(Arrays.asList(args));
                 a.preExecute(this, method.getAnnotation(a.getType()), tempArgs, ctx);
                 args = tempArgs.toArray();
@@ -122,25 +128,34 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
                 return CommandResult.fail(e);
             }
         }
+        System.out.println("\tgathering syntaxless args...");
         for (ParameterArgument a : syntaxlessArgs) {
             try {
-                args[a.getIndex()] = a.modify(a.getDefault(ctx),ctx);
+                Object val = a.modify(a.getDefault(ctx), ctx);
+                args[a.getIndex()] = val;
+                System.out.println("\t\t[" + a.name + "] = " + val);
             } catch (Exception e) {
                 return CommandResult.fail(e);
             }
         }
         Object ret;
         try {
+            System.out.println("\tinvoking method...");
             ret = method.invoke(instance, args);
         } catch (InvocationTargetException e) {
+            e.printStackTrace();
             ret = CommandResult.fail(e.getCause());
         } catch (IllegalArgumentException | IllegalAccessException e) {
+            e.printStackTrace();
             throw new CommandFailedException(e);
         }
         CommandResult<Object> result = CommandResult.from(ret);
+        System.out.println("\trunning postExecute...");
         for (MethodAnnotationAdapter a : annotationAdapters) {
+            System.out.println("\t\t" + a);
             a.postExecute(this,method.getAnnotation(a.getType()),result,ctx);
         }
+        System.out.println("\tdone!");
         return result;
     }
 
@@ -155,5 +170,14 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
 
     public void addSyntaxlessArg(ParameterArgument arg) {
         this.syntaxlessArgs.add(arg);
+    }
+
+    @Override
+    public String toString() {
+        return "MethodCommand{" +
+                "name='" + name + '\'' +
+                ", method=" + method +
+                ", executable=" + (getExecutor() != null) +
+                "}";
     }
 }

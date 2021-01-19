@@ -76,7 +76,7 @@ public @interface Feedback {
                         Object value = Utils.getArgumentValueMember(arg, ctx);
                         b.delete(m.start(),m.end());
                         b.insert(m.start(),value.toString());
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         return b.toString();
                     }

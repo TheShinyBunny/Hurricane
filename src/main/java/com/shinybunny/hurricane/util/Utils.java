@@ -25,7 +25,7 @@ public class Utils {
         return m.getName();
     }
 
-    public static Object getArgumentValueMember(String expr, CommandExecutionContext ctx) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
+    public static Object getArgumentValueMember(String expr, CommandExecutionContext ctx) throws Exception {
         Object value = null;
         boolean first = true;
         String str = expr;
@@ -33,9 +33,12 @@ public class Utils {
             int dot = str.indexOf('.');
             String node = str.substring(0,dot < 0 ? str.length() : dot);
             if (first) {
+                System.out.println("args: " + ctx.getArguments());
                 Optional<ParsedArgument> entry = ctx.getArg(node);
                 if (entry.isPresent()) {
                     value = entry.get().getValue();
+                } else {
+                    throw new Exception("Unknown argument named " + node);
                 }
             } else {
                 if (node.endsWith("()")) {

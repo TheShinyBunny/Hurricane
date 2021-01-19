@@ -1,6 +1,5 @@
 package com.shinybunny.hurricane.tree;
 
-import com.shinybunny.hurricane.Argument;
 import com.shinybunny.hurricane.Hurricane;
 import com.shinybunny.hurricane.CommandExecutionContext;
 import com.shinybunny.hurricane.CommandRegisteringContext;
@@ -56,7 +55,6 @@ public class ParameterArgument extends Argument implements AnnotationAdapterCont
         } catch (CommandRegisterFailedException e) {
             ctx.addError(e);
         }
-
     }
 
     @Override
@@ -127,5 +125,17 @@ public class ParameterArgument extends Argument implements AnnotationAdapterCont
      */
     public int getIndex() {
         return index;
+    }
+
+    @Override
+    public String toString() {
+        return "ParameterArgument(" +
+                "name=" + name +
+                ", type=" + getType() +
+                ", required=" + isRequired() +
+                ", parameter=" + parameter +
+                ", index=" + index +
+                ", executable=" + (getExecutor() != null) +
+                ")";
     }
 }

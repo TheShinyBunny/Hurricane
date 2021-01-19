@@ -27,19 +27,18 @@ public class Hurricane {
     private List<MethodAnnotationAdapter<?>> methodAnnotationAdapters = new ArrayList<>();
     private List<ArgumentAdapter<?>> argumentAdapters = new ArrayList<>();
     private List<CommandNode> commands = new ArrayList<>();
-    private CommandNode root = new CommandNode("");
+    private final CommandNode root = new CommandNode("");
 
-    private boolean literalsIgnoreCase;
+    private boolean literalsIgnoreCase = true;
 
     private Predicate<CommandNode> commandConsumer;
 
     public Hurricane() {
-        this(true);
+        initDefaults();
     }
 
-    public Hurricane(boolean literalsIgnoreCase) {
+    public void setLiteralsIgnoreCase(boolean literalsIgnoreCase) {
         this.literalsIgnoreCase = literalsIgnoreCase;
-        initDefaults();
     }
 
     public boolean doLiteralsIgnoreCase() {
@@ -74,16 +73,13 @@ public class Hurricane {
             Parameter p = m.getParameters()[i];
             ParameterArgument arg = new ParameterArgument(p,i);
             arg.postInit(ctx);
-            if (arg.isSyntax()) {
-                if (!arg.isRequired()) {
-                    node.setExecutor(cmd);
-                }
-                node.addChild(arg);
-                node = arg;
-            } else {
-                cmd.addSyntaxlessArg(arg);
+            if (!arg.isRequired() || !arg.isSyntax()) {
+                node.setExecutor(cmd);
             }
+            node.addChild(arg);
+            node = arg;
         }
+        node.setExecutor(cmd);
         cmd.postInit(ctx);
         return cmd;
     }
@@ -267,6 +263,7 @@ public class Hurricane {
     }
 
     public ParseResult parse(CommandSender sender, String input) {
+        System.out.println("parsing command: " + input);
         InputReader reader = new InputReader(input);
         CommandExecutionContext ctx = new CommandExecutionContext(this,sender,reader,null);
         return parseNodes(root, reader, ctx);
@@ -279,12 +276,14 @@ public class Hurricane {
         int pos = originalReader.getPos();
         for (CommandNode child : node.getRelevantNodes(this,originalReader)) {
             if (!child.canUse(sender)) continue;
+            System.out.println("trying to parse node " + child);
             CommandExecutionContext ctx = builder.copy();
             InputReader reader = originalReader.copy();
             try {
                 child.parse(reader,ctx);
+                System.out.println("parsed it successfully, next char is: " + (reader.canRead() ? reader.peek() : "end"));
                 if (reader.canRead()) {
-                    if (reader.peek() != ' ') {
+                    if (reader.peek() != ' ' && child.isSyntax()) {
                         throw new CommandParsingException("Expected argument separator",reader.markerHere());
                     }
                 }
@@ -292,14 +291,17 @@ public class Hurricane {
                 if (errors == null) {
                     errors = new HashMap<>();
                 }
+                System.out.println("added error: " + e);
                 errors.put(child,e);
                 reader.setPos(pos);
                 continue;
             }
-            if (child.getExecutor() != null) {
+            if (child.isSyntax()) {
+                if (reader.canRead()) {
+                    reader.next();
+                }
                 ctx.withExecutor(child.getExecutor());
             }
-            reader.next();
             ParseResult res = parseNodes(child, reader, ctx);
             if (potentials == null) {
                 potentials = new ArrayList<>(1);
@@ -328,13 +330,14 @@ public class Hurricane {
     }
 
     public CommandResult<?> execute(ParseResult res) throws CommandParsingException {
-        if (res.getReader().canRead()) {
+        if (!res.getExceptions().isEmpty()) {
             if (res.getExceptions().size() == 1) {
-                throw res.getExceptions().values().iterator().next();
+                throw res.getExceptions().values().iterator().next(); // TODO: 19/01/2021 make a multi-error for multiple errors
             } else {
                 throw new CommandParsingException("Unknown argument",res.getReader().markerHere());
             }
         }
+        System.out.println("executing command /" + res.getReader().getString());
         if (res.getContext().getExecutor() != null) {
             return res.getContext().getExecutor().execute(res.getContext());
         }
