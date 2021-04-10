@@ -14,11 +14,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * The main CommandAPI instance. This is a common class storing all commands and all type adapters, serving as a command system.
- * You can create multiple command APIs to have multiple different command systems.
+ * The main Hurricane API instance. This is a common class storing all commands and all type adapters, serving as a command system.
+ * You can create multiple instances of this class to have multiple different command systems.
  * <br/>
- * <br/>
- * To register commands, call {@link #register(Object)} with a holder class for multiple method commands,
+ * To register commands, call {@link #register(Object)} with a container class for multiple method commands,
  * or call {@link #register(CommandNode)} with a built command instance.
  */
 public class Hurricane {
@@ -26,27 +25,66 @@ public class Hurricane {
     private List<ParamAnnotationAdapter<?>> paramAnnotationAdapters = new ArrayList<>();
     private List<MethodAnnotationAdapter<?>> methodAnnotationAdapters = new ArrayList<>();
     private List<ArgumentAdapter<?>> argumentAdapters = new ArrayList<>();
-    private List<CommandNode> commands = new ArrayList<>();
     private final CommandNode root = new CommandNode("");
 
     private boolean literalsIgnoreCase = true;
+    private boolean allowMultiSpaces = true;
 
     private Predicate<CommandNode> commandConsumer;
+    private Consumer<String> logger;
 
     public Hurricane() {
         initDefaults();
     }
 
+    /**
+     * Determines if literal arguments (usually command names and sub-commands) ignore capitalization.
+     * That means the input <code>HELP</code> will run the command <code>help</code>.
+     * @param literalsIgnoreCase True to ignore case when matching literal strings
+     */
     public void setLiteralsIgnoreCase(boolean literalsIgnoreCase) {
         this.literalsIgnoreCase = literalsIgnoreCase;
     }
 
-    public boolean doLiteralsIgnoreCase() {
+    /**
+     * Determines if arguments in a command can be separated by more than 1 whitespace character.
+     * @param allowMultiSpaces True to allow multiple spaces between parsed arguments
+     */
+    public void setAllowMultiSpaces(boolean allowMultiSpaces) {
+        this.allowMultiSpaces = allowMultiSpaces;
+    }
+
+    public boolean isAllowMultiSpaces() {
+        return allowMultiSpaces;
+    }
+
+    public boolean areLiteralsIgnoreCase() {
         return literalsIgnoreCase;
     }
 
+    /**
+     * Sets a callback to when a new command has been registered to this API instance.
+     * @param consumer The callback, with the registered {@link CommandNode} as the parameter. Returning false will cancel the command registration.
+     */
     public void onCommandRegistered(Predicate<CommandNode> consumer) {
         commandConsumer = consumer;
+    }
+
+    /**
+     * Sets a callback to logging messages. Good for debugging the API.
+     */
+    public void setLogger(Consumer<String> logger) {
+        this.logger = logger;
+    }
+
+    public Consumer<String> getLogger() {
+        return logger;
+    }
+
+    public void log(String msg) {
+        if (logger != null) {
+            logger.accept(msg);
+        }
     }
 
     public static void main(String[] args) {
@@ -90,28 +128,33 @@ public class Hurricane {
         addArgumentAdapter(Integer.class, InputReader::readInteger);
         addArgumentAdapter(Double.class, InputReader::readDouble);
         addArgumentAdapter(Long.class, InputReader::readLong);
+        addArgumentAdapter(Short.class, InputReader::readShort);
+        addArgumentAdapter(Byte.class, InputReader::readByte);
+        addArgumentAdapter(Float.class, InputReader::readFloat);
         addArgumentAdapter(new User.Adapter());
         addArgumentAdapter(new EnumAdapter());
         addArgumentAdapter(new CommandSenderAdapter());
-
-        addParamAnnotationAdapter(new NullableAdapter());
+        addArgumentAdapter(new ContextAdapter());
     }
 
-
-    public void register(Object holder) {
-        Class<?> cls = holder instanceof Class ? (Class<?>)holder : holder.getClass();
+    /**
+     * Registers an entire class containing multiple methods annotated with {@link Command}.
+     * @param container The container class or an instance of the class
+     */
+    public void register(Object container) {
+        Class<?> cls = container instanceof Class ? (Class<?>)container : container.getClass();
         if (cls.isInterface() || cls.isArray() || cls.isAnnotation()) {
             throw new RuntimeException(new CommandRegisterFailedException("Invalid command container, can only register classes or enum classes."));
         }
-        CommandContainer container = new CommandContainer(this,holder);
+        CommandContainer c = new CommandContainer(this,container);
         if (cls.isAnnotationPresent(Command.class)) {
-            register(createTree(container,cls.getAnnotation(Command.class)));
+            register(createTree(c,cls.getAnnotation(Command.class)));
         } else {
-            createFromContainer(container,this::register);
+            createFromContainer(c,this::register);
         }
     }
 
-    public void createFromContainer(CommandContainer container, Consumer<CommandNode> consumer) {
+    protected void createFromContainer(CommandContainer container, Consumer<CommandNode> consumer) {
         Class<?> cls = container.getContainingClass();
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(Command.class)) {
@@ -130,30 +173,39 @@ public class Hurricane {
         }
     }
 
+    /**
+     * Registers a single command to the command tree.
+     * <p>
+     *     If there is a {@link #onCommandRegistered(Predicate) command registered} consumer set,
+     *     Will only register the command if that predicate returned <code>true</code>.
+     * </p>
+     * @param cmd The root {@link CommandNode} of the command.
+     */
     public void register(CommandNode cmd) {
         if (commandConsumer == null || commandConsumer.test(cmd)) {
-            System.out.println("added command");
-            System.out.println(cmd);
-            commands.add(cmd);
-            root.addChild(cmd);
+            log("Added command: " + cmd);
+            getRoot().addChild(cmd);
         }
     }
 
     public CommandNode createTree(CommandContainer container, Command settings) {
         Class<?> cls = container.getContainingClass();
         CommandNode cmd = new CommandNode(container.getName(settings));
+        cmd.setDescription(settings.desc());
         for (Method m : cls.getDeclaredMethods()) {
-            CommandRegisteringContext ctx = new CommandRegisteringContext(this,container,Utils.getName(m));
-            CommandNode node = createFromMethod(ctx,m,container);
-            if (!ctx.isCancelled()) {
-                if (m.isAnnotationPresent(DefaultSubCommand.class)) {
-                    for (CommandNode gc : node.getChildren()) {
-                        cmd.addChild(gc);
+            if (m.isAnnotationPresent(Command.class)) {
+                CommandRegisteringContext ctx = new CommandRegisteringContext(this, container, Utils.getName(m));
+                CommandNode node = createFromMethod(ctx, m, container);
+                if (!ctx.isCancelled()) {
+                    if (m.isAnnotationPresent(DefaultSubCommand.class)) {
+                        for (CommandNode gc : node.getChildren()) {
+                            cmd.addChild(gc);
+                        }
                     }
+                    cmd.addChild(node);
                 }
-                cmd.addChild(node);
+                ctx.printErrors();
             }
-            ctx.printErrors();
         }
         return cmd;
     }
@@ -262,11 +314,17 @@ public class Hurricane {
         methodAnnotationAdapters.removeIf(a->a.getType() == annotationType);
     }
 
+    /**
+     * Parses a command input, ran by the passed {@link CommandSender}.
+     * @param sender The entity executing the command
+     * @param input The command input
+     * @return An object representing the compiled parsing results, to be saved for later or passed to {@link #execute(ParseResult)}.
+     */
     public ParseResult parse(CommandSender sender, String input) {
-        System.out.println("parsing command: " + input);
+        log("parsing command: " + input);
         InputReader reader = new InputReader(input);
         CommandExecutionContext ctx = new CommandExecutionContext(this,sender,reader,null);
-        return parseNodes(root, reader, ctx);
+        return parseNodes(getRoot(), reader, ctx);
     }
 
     private ParseResult parseNodes(CommandNode node, InputReader originalReader, CommandExecutionContext builder) {
@@ -276,29 +334,32 @@ public class Hurricane {
         int pos = originalReader.getPos();
         for (CommandNode child : node.getRelevantNodes(this,originalReader)) {
             if (!child.canUse(sender)) continue;
-            System.out.println("trying to parse node " + child);
+            log("trying to parse node " + child);
             CommandExecutionContext ctx = builder.copy();
             InputReader reader = originalReader.copy();
             try {
                 child.parse(reader,ctx);
-                System.out.println("parsed it successfully, next char is: " + (reader.canRead() ? reader.peek() : "end"));
                 if (reader.canRead()) {
-                    if (reader.peek() != ' ' && child.isSyntax()) {
-                        throw new CommandParsingException("Expected argument separator",reader.markerHere());
+                    if (reader.peek() != ' ' && child.isSyntax() && child.needsSpaceAfter()) {
+                        throw new CommandParsingException("Expected a space to end argument",reader.markerHere());
                     }
                 }
             } catch (CommandParsingException e) {
                 if (errors == null) {
                     errors = new HashMap<>();
                 }
-                System.out.println("added error: " + e);
+                log("added error: " + e);
                 errors.put(child,e);
                 reader.setPos(pos);
                 continue;
             }
             if (child.isSyntax()) {
                 if (reader.canRead()) {
-                    reader.next();
+                    if (isAllowMultiSpaces()) {
+                        reader.skipSpace();
+                    } else if (reader.peek() == ' ') {
+                        reader.next();
+                    }
                 }
                 ctx.withExecutor(child.getExecutor());
             }
@@ -324,12 +385,27 @@ public class Hurricane {
         return new ParseResult(builder,originalReader,errors == null ? new HashMap<>() : errors);
     }
 
-    public CommandResult<?> execute(CommandSender sender, String input) throws CommandParsingException {
+    /**
+     * Parses and executes a command input.
+     * @param sender The source of execution
+     * @param input The command input line to parse
+     * @return A {@link CommandResult} with info about the results of running the command.
+     * @throws CommandParsingException When an error occurs while parsing the command input. Can be caught and sent to the user to inform about syntax errors.
+     * @throws CommandFailedException When an <b>unexpected</b> error occurs while executing the command.
+     */
+    public CommandResult<?> execute(CommandSender sender, String input) throws CommandParsingException, CommandFailedException {
         ParseResult res = parse(sender,input);
         return execute(res);
     }
 
-    public CommandResult<?> execute(ParseResult res) throws CommandParsingException {
+    /**
+     * Executes a command from a {@link ParseResult} object.
+     * @param res The result object returned from {@link #parse(CommandSender, String)}
+     * @return A {@link CommandResult} with info about the results of running the command.
+     * @throws CommandParsingException When the parse results have an error it will throw it
+     * @throws CommandFailedException When an <b>unexpected</b> error occurs while executing the command.
+     */
+    public CommandResult<?> execute(ParseResult res) throws CommandParsingException, CommandFailedException {
         if (!res.getExceptions().isEmpty()) {
             if (res.getExceptions().size() == 1) {
                 throw res.getExceptions().values().iterator().next(); // TODO: 19/01/2021 make a multi-error for multiple errors
@@ -337,24 +413,28 @@ public class Hurricane {
                 throw new CommandParsingException("Unknown argument",res.getReader().markerHere());
             }
         }
-        System.out.println("executing command /" + res.getReader().getString());
+        log("executing command /" + res.getReader().getString());
         if (res.getContext().getExecutor() != null) {
             return res.getContext().getExecutor().execute(res.getContext());
         }
         throw new CommandParsingException("Invalid command",res.getReader().markerSince(0));
     }
 
-    public List<String> getSuggestions(ParseResult parse, int cursor) {
-        return new ArrayList<>(); // TODO: 15/01/2021 implement
-    }
-
     public CommandNode getCommand(String name) {
-        for (CommandNode cmd : commands) {
-            if (cmd.getName().equals(name)) {
+        for (CommandNode cmd : getCommands()) {
+            if (literalsEqual(cmd.getName(),name)) {
                 return cmd;
             }
         }
         return null;
+    }
+
+    public List<CommandNode> getCommands() {
+        return getRoot().getChildren();
+    }
+
+    public CommandNode getRoot() {
+        return root;
     }
 
     public static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS = new HashMap<Class<?>, Class<?>>() {
@@ -377,6 +457,6 @@ public class Hurricane {
     }
 
     public boolean literalsEqual(String a, String b) {
-        return literalsIgnoreCase ? a.equalsIgnoreCase(b) : a.equals(b);
+        return areLiteralsIgnoreCase() ? a.equalsIgnoreCase(b) : a.equals(b);
     }
 }

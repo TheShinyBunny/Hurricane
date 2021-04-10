@@ -24,7 +24,7 @@ public class SuggestionConsumer {
 
     public void suggestEnum(Class<? extends Enum<?>> enumClass) {
         Object[] consts = enumClass.getEnumConstants();
-        suggest(Arrays.stream(consts).map(String::valueOf).toArray(String[]::new));
+        suggest(Arrays.stream(consts).map(String::valueOf).map(String::toLowerCase).toArray(String[]::new));
     }
 
     public List<String> getResult() {

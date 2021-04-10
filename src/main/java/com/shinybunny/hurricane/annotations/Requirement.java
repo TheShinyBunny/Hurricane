@@ -18,24 +18,15 @@ public @interface Requirement {
 
     Class<? extends Callback<?>> value();
 
-    String msg() default "You are not allowed to use this command";
-
     interface Callback<S extends CommandSender> {
-        boolean check(S sender, CommandExecutionContext ctx);
+        boolean check(S sender);
     }
 
     class Adapter implements MethodAnnotationAdapter<Requirement> {
 
         @Override
-        public void preExecute(MethodCommand cmd, Requirement annotation, List<Object> args, CommandExecutionContext ctx) {
-            try {
-                Callback cb = annotation.value().newInstance();
-                if (!cb.check(ctx.getSender(),ctx)) {
-                    throw new CommandFailedException(annotation.msg());
-                }
-            } catch (ReflectiveOperationException e) {
-                throw new CommandFailedException(e);
-            }
+        public void preExecute(MethodCommand cmd, Requirement annotation, List<Object> args, CommandExecutionContext ctx) throws CommandFailedException {
+
         }
 
         @Override
@@ -50,7 +41,17 @@ public @interface Requirement {
 
         @Override
         public void init(Requirement instance, MethodCommand container, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
+            container.setRequirement(sender->{
+                try {
+                    Callback cb = instance.value().newInstance();
+                    if (cb.check(sender)) {
+                        return true;
+                    }
+                } catch (ReflectiveOperationException ignored) {
 
+                }
+                return false;
+            });
         }
     }
 

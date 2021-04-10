@@ -5,7 +5,6 @@ import com.shinybunny.hurricane.annotations.Command;
 import com.shinybunny.hurricane.tree.ParsedArgument;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -33,7 +32,6 @@ public class Utils {
             int dot = str.indexOf('.');
             String node = str.substring(0,dot < 0 ? str.length() : dot);
             if (first) {
-                System.out.println("args: " + ctx.getArguments());
                 Optional<ParsedArgument> entry = ctx.getArg(node);
                 if (entry.isPresent()) {
                     value = entry.get().getValue();

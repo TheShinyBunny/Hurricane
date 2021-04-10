@@ -22,8 +22,8 @@ public class Argument extends CommandNode {
     private ArgumentAdapter<?> adapter;
     private boolean syntax = true;
     private boolean required = true;
+    private boolean needsSpaceAfter = true;
     private SuggestionProvider suggestionProvider;
-    private String description;
 
     public Argument(String name, Class<?> type) {
         super(name);
@@ -112,10 +112,10 @@ public class Argument extends CommandNode {
     }
 
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
-        System.out.println("parsing argument " + this + " starting with: " + reader.peek());
+        ctx.getApi().log("parsing argument " + this + " starting with: " + reader.peek());
         Object obj = getDefault(ctx);
         int start = reader.getPos();
-        if (syntax) {
+        if (isSyntax()) {
             if (reader.canRead()) {
                 try {
                     obj = adapter.parse(reader, ctx, this);
@@ -126,7 +126,7 @@ public class Argument extends CommandNode {
                         throw e;
                     }
                 }
-            } else if (ctx.getExecutor() == null) {
+            } else if (isRequired()) {
                 throw new CommandParsingException("Expected argument " + name);
             }
         }
@@ -187,16 +187,17 @@ public class Argument extends CommandNode {
         }
     }
 
+    public void setNeedsSpaceAfter(boolean needsSpaceAfter) {
+        this.needsSpaceAfter = needsSpaceAfter;
+    }
+
+    @Override
+    public boolean needsSpaceAfter() {
+        return needsSpaceAfter;
+    }
+
     public SuggestionProvider getSuggestionProvider() {
         return suggestionProvider;
-    }
-
-    public void setDescription(String desc) {
-        this.description = desc;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
 

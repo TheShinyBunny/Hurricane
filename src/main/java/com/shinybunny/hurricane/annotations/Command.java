@@ -9,7 +9,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation should be used on any method that should be registered as a command inside of a {@link CommandContainer}.
+ * This annotation should be used on any method that should be registered as a command inside of a command container.
  * Any other method without this annotation will not be interpreted as a command in the API.
  * <br/>
  * This annotation can be used inside command containers to mark an inner class as a tree command (see {@link Hurricane#register(Object)}
@@ -30,6 +30,9 @@ public @interface Command {
      */
     String value() default "";
 
+    /**
+     * A description for the command. Can be used to provide command help.
+     */
     String desc() default "";
 
 }

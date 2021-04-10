@@ -18,7 +18,7 @@ Here is a very simple example of a command that will generate a random number in
 public int rand(int min, int max) {
     int num = new Random().nextInt(max - min + 1) + min;
     System.out.println("Your number is: " + num);
-} 
+}
 ```
 
 In this example we have the command, `rand`, that takes 2 integer arguments. It then generates a random number in that range and prints it.
@@ -97,6 +97,10 @@ A failure of a command is when a method has been executed and threw an exception
 
 The `success` and `fail` messages can include the returned value with the `${result}` pattern, and can include any parameter value with an [access expression](#access-expressions).
 
+### `@Requirement`
+
+This annotation can define a requirement that needs to be met in order to allow execution of the command. The `value()` property should get a class implementing `Requirement.Callback` with the `boolean check(CommandSender sender)` method. This check is run every time before the command is executed and returning `false` will prevent it from going any further.
+
 ## Parameter Annotation Adapters
 
 These annotations are used on parameters in a method command. They can modify the registration process, and the value parsed from the input.
@@ -107,6 +111,28 @@ These annotations are used on parameters in a method command. They can modify th
 
 Use this annotation on a parameter argument to set its name and/or description.
 An argument's name is defined by default to the parameter's name, but unless you compile your code with the `-parameters` flag, param names will be `arg0`, `arg1` etc. This annotation lets you define a meaningful name for the argument, so error feedback will be more understandable.
+
+### `@Default`
+
+This annotation can make an argument in a command optional, by defining it a default value when it is omitted.
+
+The annotation has many options but only one is used at a time. Depending on the type of argument, the `@Default` annotation selects the matching option. For example, `int` arguments will use the `integer()` property, `String` will use `string()`, etc.
+
+These properties only exist for primitive types, so for any other value type you should use `@Arg(optional=true)` to make it null by default.
+
+Another option for primitive and non-primitive types alike, is to use `@Default(computed="<access expression>")`, with an [Access Expression](#access-expressions).
+
+### `@Greedy`
+
+The Greedy annotation is for a string argument taking a varying length string, typically as the last argument. Simply annotate a `String` argument with `@Greedy` to let it parse more than one word.
+
+### `@Range`
+
+This annotation can be used on any number to define a range of values it allows. If the input number is not within the range defined by `min()` and `max()`, an exception will be thrown, and the command will not run.
+
+### `@Sender`
+
+This annotation can be used on parameters that should be injected as the sender of the command. If the command sender instance cannot be cast to the argument type, it will fail.
 
 ## Access Expressions
 

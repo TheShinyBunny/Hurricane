@@ -18,7 +18,7 @@ public class ExampleCommands {
     public static int dice(@Range(min = 1) @Default(integer = 1) int min,
                            @Range(min = 2) @Default(integer = 6) int max) {
         if (min > max) {
-            throw new CommandFailedException();
+            throw new RuntimeException();
         }
         Random r = new Random();
         return r.nextInt(max - min - 1) + min;

@@ -58,8 +58,20 @@ public class InputReader {
         return readNumber(Double::parseDouble);
     }
 
+    public float readFloat() throws InvalidNumberException {
+        return readNumber(Float::parseFloat);
+    }
+
     public long readLong() throws InvalidNumberException {
         return readNumber(Long::parseLong);
+    }
+
+    public short readShort() throws InvalidNumberException {
+        return readNumber(Short::parseShort);
+    }
+
+    public byte readByte() throws InvalidNumberException {
+        return readNumber(Byte::parseByte);
     }
 
     public <N extends Number> N readNumber(Function<String,N> parser) throws InvalidNumberException {
@@ -79,7 +91,7 @@ public class InputReader {
         }
         N number;
         if (!hasDigits) {
-            throw new InvalidNumberException("No digits in number!",markerSince(pos));
+            throw new InvalidNumberException("Expected a number",markerSince(pos));
         }
         try {
             number = parser.apply(str);
@@ -186,6 +198,7 @@ public class InputReader {
         String after = canRead() ? input.substring(pos) : "";
         return before + '|' + after;
     }
+
 
 
 }

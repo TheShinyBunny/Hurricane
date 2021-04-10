@@ -1,6 +1,6 @@
 package com.shinybunny.hurricane.util;
 
-public class CommandFailedException extends RuntimeException {
+public class CommandFailedException extends Exception {
 
     public CommandFailedException() {
     }

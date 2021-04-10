@@ -28,6 +28,8 @@ public @interface Arg {
      */
     String desc() default "";
 
+    boolean optional() default false;
+
     class Adapter implements ParamAnnotationAdapter<Arg> {
 
         @Override
@@ -45,6 +47,9 @@ public @interface Arg {
             container.setName(instance.value());
             if (!instance.desc().isEmpty()) {
                 container.setDescription(instance.desc());
+            }
+            if (instance.optional()) {
+                container.setRequired(false);
             }
         }
     }

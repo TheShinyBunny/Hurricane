@@ -14,7 +14,7 @@ public class BooleanAdapter implements ArgumentAdapter<Boolean> {
     @Override
     public Boolean parse(InputReader reader, CommandExecutionContext ctx, Argument argument) throws CommandParsingException {
         int start = reader.getPos();
-        return "true".equals(reader.readOneOf("true","false").orElseThrow(()->new CommandParsingException("Invalid boolean, expected 'true' or 'false'",reader.markerSince(start))));
+        return "true".equals(reader.readOneOf("true","false").orElseThrow(()->new CommandParsingException("Expected 'true' or 'false'",reader.markerSince(start))));
     }
 
     @Override

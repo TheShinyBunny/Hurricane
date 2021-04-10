@@ -25,6 +25,14 @@ public @interface Default {
 
     double doubleValue() default 0;
 
+    float floatValue() default 0;
+
+    short shortValue() default 0;
+
+    byte byteValue() default 0;
+
+    long longValue() default 0;
+
     boolean bool() default false;
 
     String string() default "";
@@ -67,6 +75,10 @@ public @interface Default {
                 if (argument.getType() == Double.class) return annotation.doubleValue();
                 if (argument.getType() == Boolean.class) return annotation.bool();
                 if (argument.getType() == String.class) return annotation.string();
+                if (argument.getType() == Short.class) return annotation.shortValue();
+                if (argument.getType() == Byte.class) return annotation.byteValue();
+                if (argument.getType() == Long.class) return annotation.longValue();
+                if (argument.getType() == Float.class) return annotation.floatValue();
             }
             return value;
         }

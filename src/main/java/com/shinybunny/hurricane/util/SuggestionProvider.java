@@ -12,7 +12,7 @@ import com.shinybunny.hurricane.ParseResult;
 public interface SuggestionProvider {
 
     /**
-     * Suggests values to the {@link SuggestionConsumer} parameter. Called every time this provider is activated by calling {@link Hurricane#getSuggestions(ParseResult, int)}
+     * Suggests values to the {@link SuggestionConsumer} parameter.
      * @param reader The input reader of the entire command, with {@link InputReader#getPos() it's pos} set to the position of the cursor.
      * @param suggestions The suggestion consumer that takes all the possible suggestions.
      * @param sender The source that requested to list suggestions

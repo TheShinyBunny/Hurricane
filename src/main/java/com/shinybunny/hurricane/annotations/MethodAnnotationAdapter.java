@@ -19,7 +19,7 @@ public interface MethodAnnotationAdapter<A extends Annotation> extends Annotatio
 
     void preExecute(MethodCommand cmd, A annotation, List<Object> args, CommandExecutionContext ctx) throws CommandFailedException;
 
-    void postExecute(MethodCommand cmd, A annotation, CommandResult<?> result, CommandExecutionContext ctx) throws CommandFailedException;
+    void postExecute(MethodCommand cmd, A annotation, CommandResult<?> result, CommandExecutionContext ctx);
 
     default void postInit(A annotation, MethodCommand cmd, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
 

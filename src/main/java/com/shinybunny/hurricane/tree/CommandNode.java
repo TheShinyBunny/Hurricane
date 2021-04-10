@@ -33,6 +33,15 @@ public class CommandNode extends CustomDataHolder {
         return children;
     }
 
+    public List<CommandNode> getChildrenRecursively() {
+        List<CommandNode> nodes = new ArrayList<>();
+        for (CommandNode child : children) {
+            nodes.add(child);
+            nodes.addAll(child.getChildrenRecursively());
+        }
+        return nodes;
+    }
+
     public List<? extends CommandNode> getRelevantNodes(Hurricane api, InputReader reader) {
         if (children.size() > argChildren.size()) {
             for (CommandNode child : children) {
@@ -93,11 +102,39 @@ public class CommandNode extends CustomDataHolder {
                 "}";
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getDescription() {
         return description;
     }
 
     public boolean isSyntax() {
+        return true;
+    }
+
+    public boolean hasSyntaxDescendants() {
+        for (CommandNode c : children) {
+            if (c.isSyntax()) return true;
+            if (c.hasSyntaxDescendants()) return true;
+        }
+        return false;
+    }
+
+    public List<CommandNode> getSyntaxDescendants() {
+        List<CommandNode> list = new ArrayList<>();
+        for (CommandNode n : children) {
+            if (n.isSyntax()) {
+                list.add(n);
+            } else {
+                list.addAll(n.getSyntaxDescendants());
+            }
+        }
+        return list;
+    }
+
+    public boolean needsSpaceAfter() {
         return true;
     }
 }
