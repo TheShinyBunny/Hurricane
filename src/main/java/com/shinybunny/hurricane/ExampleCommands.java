@@ -9,7 +9,7 @@ public class ExampleCommands {
 
     @Command
     @Feedback(success="Kicked user ${user.getName()} from the server for ${reason}!",fail="You have no permissions to use this command!")
-    public static boolean kick(@Sender User sender, User user, @Default(string = "no apparent reason") @Greedy String reason) {
+    public static boolean kick(@Sender User sender, User user, @Default("no apparent reason") @Greedy String reason) {
         return true;
     }
 

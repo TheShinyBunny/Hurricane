@@ -42,13 +42,8 @@ public class CommandContainer {
         if (instanceCtor != null) {
             List<Object> args = new ArrayList<>();
             for (ParameterArgument a : instanceCtorArgs) {
-                Object obj = a.getDefault(ctx);
                 try {
-                    Object mod = a.modify(obj, ctx);
-
-                    if (mod != null) {
-                        obj = mod;
-                    }
+                    Object obj = a.getDefault(ctx);
                     args.add(obj);
                 } catch (Exception e) {
                     throw new CommandFailedException(e);
