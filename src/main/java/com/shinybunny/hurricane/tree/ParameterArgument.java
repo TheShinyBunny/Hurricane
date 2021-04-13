@@ -58,14 +58,19 @@ public class ParameterArgument extends Argument implements AnnotationAdapterCont
     }
 
     @Override
-    public Object modify(Object obj, CommandExecutionContext ctx) throws Exception {
+    public void validate(Object obj, CommandExecutionContext ctx) throws Exception {
         for (ParamAnnotationAdapter a : annotationAdapters) {
-            Object newObj = a.modify(obj,getAnnotation(a),this,ctx);
-            if (newObj != null) {
-                obj = newObj;
-            }
+            a.validate(obj,getAnnotation(a),this,ctx);
         }
-        return obj;
+    }
+
+    @Override
+    public Object getDefault(CommandExecutionContext ctx) throws Exception {
+        for (ParamAnnotationAdapter a : annotationAdapters) {
+            Object def = a.getDefault(getAnnotation(a), this, ctx);
+            if (def != null) return def;
+        }
+        return getAdapter().getDefault(ctx);
     }
 
     private Annotation getAnnotation(ParamAnnotationAdapter a) {
@@ -87,8 +92,8 @@ public class ParameterArgument extends Argument implements AnnotationAdapterCont
         return new ParamAnnotationAdapter() {
 
             @Override
-            public Object modify(Object value, Annotation annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
-                return null;
+            public void validate(Object value, Annotation annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+
             }
 
             @Override

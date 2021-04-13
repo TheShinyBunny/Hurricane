@@ -21,6 +21,8 @@ import java.lang.reflect.InvocationTargetException;
 @Adapter(Default.Adapter.class)
 public @interface Default {
 
+    String value() default "";
+
     int integer() default 0;
 
     double doubleValue() default 0;
@@ -35,7 +37,7 @@ public @interface Default {
 
     boolean bool() default false;
 
-    String string() default "";
+
 
     /**
      * A string representing the call path to a field of another argument to use as the value.
@@ -66,22 +68,29 @@ public @interface Default {
         }
 
         @Override
-        public Object modify(Object value, Default annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
-            if (value == null) {
-                if (!annotation.computed().isEmpty()) {
-                    return computeValue(annotation.computed(),ctx);
-                }
-                if (argument.getType() == Integer.class) return annotation.integer();
-                if (argument.getType() == Double.class) return annotation.doubleValue();
-                if (argument.getType() == Boolean.class) return annotation.bool();
-                if (argument.getType() == String.class) return annotation.string();
-                if (argument.getType() == Short.class) return annotation.shortValue();
-                if (argument.getType() == Byte.class) return annotation.byteValue();
-                if (argument.getType() == Long.class) return annotation.longValue();
-                if (argument.getType() == Float.class) return annotation.floatValue();
+        public Object getDefault(Default annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+            if (!annotation.computed().isEmpty()) {
+                return computeValue(annotation.computed(),ctx);
             }
-            return value;
+            if (argument.getType() == Integer.class) return annotation.value().isEmpty() ? annotation.integer() : Integer.parseInt(annotation.value());
+            if (argument.getType() == Double.class) return annotation.value().isEmpty() ? annotation.doubleValue() : Double.parseDouble(annotation.value());
+            if (argument.getType() == Boolean.class) return annotation.value().isEmpty() ? annotation.bool() : Boolean.parseBoolean(annotation.value());
+            if (argument.getType() == Short.class) return annotation.value().isEmpty() ? annotation.shortValue() : Short.parseShort(annotation.value());
+            if (argument.getType() == Byte.class) return annotation.value().isEmpty() ? annotation.byteValue() : Byte.parseByte(annotation.value());
+            if (argument.getType() == Long.class) return annotation.value().isEmpty() ? annotation.longValue() : Long.parseLong(annotation.value());
+            if (argument.getType() == Float.class) return annotation.value().isEmpty() ? annotation.floatValue() : Float.parseFloat(annotation.value());
+
+            if (argument.getType() == String.class) return annotation.value();
+            if (argument.getType() == Character.class) return annotation.value().charAt(0);
+            if (argument.getType().isEnum()) return Enum.valueOf((Class)argument.getType(),annotation.value());
+            return null;
         }
+
+        @Override
+        public void validate(Object value, Default annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+
+        }
+
 
         private Object computeValue(String expr, CommandExecutionContext ctx) throws Exception {
             try {

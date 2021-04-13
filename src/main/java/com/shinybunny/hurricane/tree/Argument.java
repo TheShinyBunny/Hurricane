@@ -113,7 +113,7 @@ public class Argument extends CommandNode {
 
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
         ctx.getApi().log("parsing argument " + this + " starting with: " + reader.peek());
-        Object obj = getDefault(ctx);
+        Object obj = null;
         int start = reader.getPos();
         if (isSyntax()) {
             if (reader.canRead()) {
@@ -130,8 +130,15 @@ public class Argument extends CommandNode {
                 throw new CommandParsingException("Expected argument " + name);
             }
         }
+        if (obj == null) {
+            try {
+                obj = getDefault(ctx);
+            } catch (Exception e) {
+                throw new CommandParsingException(e.getMessage());
+            }
+        }
         try {
-            obj = modify(obj, ctx);
+            validate(obj,ctx);
         } catch (Exception e) {
             throw new CommandParsingException(e.getMessage());
         }
@@ -139,8 +146,12 @@ public class Argument extends CommandNode {
         ctx.withArgument(name,parsed);
     }
 
-    public Object modify(Object obj, CommandExecutionContext ctx) throws Exception {
-        return obj;
+    public void validate(Object obj, CommandExecutionContext ctx) throws Exception {
+
+    }
+
+    public Object getDefault(CommandExecutionContext ctx) throws Exception {
+        return adapter.getDefault(ctx);
     }
 
     public boolean isRequired() {
@@ -169,9 +180,7 @@ public class Argument extends CommandNode {
         return (required ? "" : "[") + "<" + name + ": " + type.getSimpleName() + ">" + (required ? "" : "]");
     }
 
-    public Object getDefault(CommandExecutionContext ctx) {
-        return adapter.getDefault(ctx);
-    }
+
 
     public boolean hasAnnotation(Class<? extends Annotation> annotationType) {
         return false;

@@ -56,25 +56,27 @@ public @interface Feedback {
                 msg = annotation.fail();
             }
             if (msg.isEmpty()) return;
-            if (result.getResult() != null) {
-                msg = String.format(msg,result.getResult());
-            }
-            msg = formatMessage(msg,ctx);
+            msg = formatMessage(msg,ctx,result);
             ctx.getSender().sendFeedback(result.isSuccessful(),msg);
         }
 
         private static final Pattern argPattern = Pattern.compile("(?<!\\\\)\\$\\{([^}]+)}");
 
-        private String formatMessage(String msg, CommandExecutionContext ctx) {
+        private String formatMessage(String msg, CommandExecutionContext ctx, Object result) {
             StringBuilder b = new StringBuilder(msg);
             while (true) {
                 Matcher m = argPattern.matcher(b);
                 if (m.find()) {
                     String arg = m.group(1);
                     try {
-                        Object value = Utils.getArgumentValueMember(arg, ctx);
+                        Object value;
+                        if (arg.equalsIgnoreCase("result")) {
+                            value = result;
+                        } else {
+                            value = Utils.getArgumentValueMember(arg, ctx);
+                        }
                         b.delete(m.start(),m.end());
-                        b.insert(m.start(),value.toString());
+                        b.insert(m.start(), value);
                     } catch (Exception e) {
                         e.printStackTrace();
                         return b.toString();

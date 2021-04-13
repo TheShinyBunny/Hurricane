@@ -18,7 +18,7 @@ public @interface Sender {
     class Adapter implements ParamAnnotationAdapter<Sender> {
 
         @Override
-        public Object modify(Object value, Sender annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+        public Object getDefault(Sender annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
             if (argument.getType().isInstance(ctx.getSender())) {
                 return ctx.getSender();
             }
@@ -26,6 +26,11 @@ public @interface Sender {
                 return ctx.getSender().getDelegate();
             }
             throw new Exception("You cannot use this command!");
+        }
+
+        @Override
+        public void validate(Object value, Sender annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+
         }
 
         @Override

@@ -16,11 +16,10 @@ import java.lang.annotation.Annotation;
  */
 public interface ParamAnnotationAdapter<A extends Annotation> extends AnnotationAdapter<A,ParameterArgument> {
 
-    /**
-     * Validates the value of an argument and possibly modifying it to a different value.
-     * @param value The value so far that was parsed from the input or returned from previous annotation adapters.
-     * @return <code>null</code> or the same value to make no change. Any other value will be used for the command instead.
-     */
-    Object modify(Object value, A annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception;
+    default Object getDefault(A annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+        return null;
+    }
+
+    void validate(Object value, A annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception;
 
 }

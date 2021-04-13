@@ -131,6 +131,7 @@ public class Hurricane {
         addArgumentAdapter(Short.class, InputReader::readShort);
         addArgumentAdapter(Byte.class, InputReader::readByte);
         addArgumentAdapter(Float.class, InputReader::readFloat);
+        addArgumentAdapter(Character.class, InputReader::next);
         addArgumentAdapter(new User.Adapter());
         addArgumentAdapter(new EnumAdapter());
         addArgumentAdapter(new CommandSenderAdapter());

@@ -21,7 +21,7 @@ public @interface Range {
     class Adapter implements ParamAnnotationAdapter<Range> {
 
         @Override
-        public Object modify(Object value, Range annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+        public void validate(Object value, Range annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
             if (value instanceof Number) {
                 double d = ((Number)value).doubleValue();
                 if (annotation.min() > d) {
@@ -31,7 +31,6 @@ public @interface Range {
                     throw new Exception(argument.getName() + " must be less than " + Utils.formatDouble(annotation.max()));
                 }
             }
-            return null;
         }
 
         @Override

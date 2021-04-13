@@ -24,10 +24,6 @@ public @interface Condition {
     Comparison op();
 
     class Adapter implements ParamAnnotationAdapter<Condition> {
-        @Override
-        public Object modify(Object value, Condition annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
-            return null;
-        }
 
         @Override
         public Class<Condition> getType() {
@@ -36,6 +32,11 @@ public @interface Condition {
 
         @Override
         public void init(Condition instance, ParameterArgument container, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
+
+        }
+
+        @Override
+        public void validate(Object value, Condition annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
 
         }
     }

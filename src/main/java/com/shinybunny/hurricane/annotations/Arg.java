@@ -33,11 +33,6 @@ public @interface Arg {
     class Adapter implements ParamAnnotationAdapter<Arg> {
 
         @Override
-        public Object modify(Object value, Arg annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
-            return null;
-        }
-
-        @Override
         public Class<Arg> getType() {
             return Arg.class;
         }
@@ -51,6 +46,11 @@ public @interface Arg {
             if (instance.optional()) {
                 container.setRequired(false);
             }
+        }
+
+        @Override
+        public void validate(Object value, Arg annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+
         }
     }
 

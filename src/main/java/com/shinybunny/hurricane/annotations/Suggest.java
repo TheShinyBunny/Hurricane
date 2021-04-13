@@ -36,11 +36,6 @@ public @interface Suggest {
     class Adapter implements ParamAnnotationAdapter<Suggest> {
 
         @Override
-        public Object modify(Object value, Suggest annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
-            return null;
-        }
-
-        @Override
         public Class<Suggest> getType() {
             return Suggest.class;
         }
@@ -63,6 +58,11 @@ public @interface Suggest {
                     provider.get().suggest(reader,suggestions,sender,arg);
                 }
             }));
+        }
+
+        @Override
+        public void validate(Object value, Suggest annotation, ParameterArgument argument, CommandExecutionContext ctx) throws Exception {
+
         }
     }
 
