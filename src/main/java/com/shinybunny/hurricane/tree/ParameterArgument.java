@@ -140,7 +140,6 @@ public class ParameterArgument extends Argument implements AnnotationAdapterCont
                 ", required=" + isRequired() +
                 ", parameter=" + parameter +
                 ", index=" + index +
-                ", executable=" + (getExecutor() != null) +
                 ")";
     }
 }

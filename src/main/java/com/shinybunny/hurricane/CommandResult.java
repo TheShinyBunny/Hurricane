@@ -14,7 +14,7 @@ public class CommandResult<T> {
 
     @Override
     public String toString() {
-        return "Result(" + (success ? "success" : "failure") + ": " + result + ", '" + message + "')";
+        return "Result: " + (success ? "success" : "failure") + " (" + result + ") '" + message + "')";
     }
 
     public void setMessage(String message) {

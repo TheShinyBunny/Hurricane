@@ -1,10 +1,8 @@
 package com.shinybunny.hurricane.util;
 
 import com.shinybunny.hurricane.tree.Argument;
-import com.shinybunny.hurricane.Hurricane;
 import com.shinybunny.hurricane.CommandSender;
 import com.shinybunny.hurricane.InputReader;
-import com.shinybunny.hurricane.ParseResult;
 
 /**
  * A custom definition of a suggestion list provider. Suggestions can be used by programs with any kind of command completion/suggestion system.

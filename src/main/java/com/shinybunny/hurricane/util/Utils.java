@@ -4,8 +4,11 @@ import com.shinybunny.hurricane.CommandExecutionContext;
 import com.shinybunny.hurricane.annotations.Command;
 import com.shinybunny.hurricane.tree.ParsedArgument;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class Utils {
@@ -59,5 +62,15 @@ public class Utils {
             return "unknown";
         }
         return value;
+    }
+
+    public static String[] toStringArr(Object array) {
+        int n = Array.getLength(array);
+        List<String> strs = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            Object o = Array.get(array, i);
+            strs.add(o.toString());
+        }
+        return strs.toArray(new String[0]);
     }
 }

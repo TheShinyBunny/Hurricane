@@ -1,5 +1,6 @@
 package com.shinybunny.hurricane;
 
+import com.shinybunny.hurricane.tree.CustomCommand;
 import com.shinybunny.hurricane.tree.ParsedArgument;
 import com.shinybunny.hurricane.util.CustomDataHolder;
 
@@ -13,11 +14,10 @@ public class CommandExecutionContext extends CustomDataHolder {
     private Map<String, ParsedArgument> arguments;
     private CommandExecutor executor;
 
-    public CommandExecutionContext(Hurricane api, CommandSender sender, InputReader reader, CommandExecutor executor) {
+    public CommandExecutionContext(Hurricane api, CommandSender sender, InputReader reader) {
         this.api = api;
         this.sender = sender;
         this.reader = reader;
-        this.executor = executor;
         this.arguments = new HashMap<>();
     }
 
@@ -33,13 +33,8 @@ public class CommandExecutionContext extends CustomDataHolder {
         return api;
     }
 
-    public CommandExecutionContext copyFor(CommandSender sender) {
-        if (sender == this.sender) return this;
-        return new CommandExecutionContext(api,sender,reader, executor);
-    }
-
-    public Collection<ParsedArgument> getArguments() {
-        return arguments.values();
+    public List<ParsedArgument> getArguments() {
+        return new ArrayList<>(arguments.values());
     }
 
     public Optional<ParsedArgument> getArg(String name) {
@@ -47,7 +42,7 @@ public class CommandExecutionContext extends CustomDataHolder {
     }
 
     public CommandExecutionContext copy() {
-        CommandExecutionContext ctx = new CommandExecutionContext(api, sender, reader, executor);
+        CommandExecutionContext ctx = new CommandExecutionContext(api, sender, reader);
         ctx.arguments = new HashMap<>(arguments);
         return ctx;
     }
@@ -56,7 +51,7 @@ public class CommandExecutionContext extends CustomDataHolder {
         arguments.put(name,arg);
     }
 
-    public void withExecutor(CommandExecutor executor) {
+    public void setExecutor(CommandExecutor executor) {
         this.executor = executor;
     }
 

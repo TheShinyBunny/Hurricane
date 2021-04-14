@@ -16,8 +16,11 @@ import java.lang.annotation.Annotation;
  * and are just a convenient way to pass data to the command implementation such as the {@link CommandSender sender}, the original input, the {@link CommandExecutionContext execution context}, etc.
  *
  */
-public class Argument extends CommandNode {
+public class Argument extends CustomDataHolder {
 
+    protected String name;
+    protected String description = "";
+    protected String typeHint;
     private final Class<?> type;
     private ArgumentAdapter<?> adapter;
     private boolean syntax = true;
@@ -26,8 +29,9 @@ public class Argument extends CommandNode {
     private SuggestionProvider suggestionProvider;
 
     public Argument(String name, Class<?> type) {
-        super(name);
+        this.name = name;
         this.type = Hurricane.getPrimitiveWrapper(type);
+        this.typeHint = type.getSimpleName();
     }
 
     /**
@@ -71,6 +75,26 @@ public class Argument extends CommandNode {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setTypeHint(String typeHint) {
+        this.typeHint = typeHint;
+    }
+
+    public String getTypeHint() {
+        return typeHint;
     }
 
     /**
@@ -172,7 +196,6 @@ public class Argument extends CommandNode {
                 "type=" + type +
                 ", required=" + required +
                 ", name='" + name + '\'' +
-                ", executable=" + (getExecutor() != null) +
                 "}";
     }
 
@@ -200,7 +223,6 @@ public class Argument extends CommandNode {
         this.needsSpaceAfter = needsSpaceAfter;
     }
 
-    @Override
     public boolean needsSpaceAfter() {
         return needsSpaceAfter;
     }

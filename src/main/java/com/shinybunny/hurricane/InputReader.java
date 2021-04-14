@@ -1,5 +1,6 @@
 package com.shinybunny.hurricane;
 
+import com.shinybunny.hurricane.util.CommandParsingException;
 import com.shinybunny.hurricane.util.InvalidNumberException;
 
 import java.util.Optional;
@@ -200,5 +201,11 @@ public class InputReader {
     }
 
 
-
+    public void expect(char c, String msg) throws CommandParsingException {
+        if (canRead() && peek() == c) {
+            next();
+        } else {
+            throw new CommandParsingException(msg,markerHere());
+        }
+    }
 }

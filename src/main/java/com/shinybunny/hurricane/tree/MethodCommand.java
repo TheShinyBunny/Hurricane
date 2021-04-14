@@ -22,16 +22,19 @@ import java.util.List;
  * Method commands can be annotated with custom annotations, to modify the registration and execution processes of the command.
  * To define a custom handler for a custom method annotation, implement the {@link MethodAnnotationAdapter}.
  */
-public class MethodCommand extends CommandNode implements AnnotationAdapterContainer<MethodAnnotationAdapter>, CommandExecutor {
+public class MethodCommand extends CustomCommand implements AnnotationAdapterContainer<MethodAnnotationAdapter>, CommandExecutor {
 
     private Method method;
     private CommandContainer container;
     private List<MethodAnnotationAdapter> annotationAdapters;
+    private List<ParameterArgument> arguments;
 
     public MethodCommand(CommandRegisteringContext ctx, Method method, CommandContainer container) {
         super(Utils.getName(method));
         this.method = method;
+        this.noPermsMessage = ctx.getApi().getDefaultNoPermsMessage();
         this.container = container;
+        this.arguments = new ArrayList<>();
         this.description = method.getAnnotation(Command.class).desc();
         this.annotationAdapters = resolveAnnotationAdapters(ctx);
         for (MethodAnnotationAdapter a : annotationAdapters) {
@@ -104,6 +107,27 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
     }
 
     @Override
+    public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
+        ctx.setExecutor(this);
+        if (reader.canRead()) {
+            if (ctx.getApi().isAllowMultiSpaces()) {
+                reader.skipSpace();
+            } else {
+                reader.expect(' ',"Expected a space to separate arguments!");
+            }
+        }
+        for (ParameterArgument a : arguments) {
+            a.parse(reader,ctx);
+            if (reader.canRead() && a.isSyntax() && a.needsSpaceAfter()) {
+                reader.expect(' ',"Expected a space to separate arguments!");
+                if (ctx.getApi().isAllowMultiSpaces()) {
+                    reader.skipSpace();
+                }
+            }
+        }
+    }
+
+    @Override
     public CommandResult<Object> execute(CommandExecutionContext ctx) throws CommandFailedException {
         ctx.getApi().log("performing execution of method command " + this);
         Object instance = Modifier.isStatic(method.getModifiers()) ? null : container.getInstance(ctx);
@@ -132,7 +156,6 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
             ctx.getApi().log("\tinvoking method " + method);
             ret = method.invoke(instance, args);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
             ret = CommandResult.fail(e.getCause());
         } catch (IllegalArgumentException | IllegalAccessException e) {
             e.printStackTrace();
@@ -161,7 +184,11 @@ public class MethodCommand extends CommandNode implements AnnotationAdapterConta
         return "MethodCommand{" +
                 "name='" + name + '\'' +
                 ", method=" + method +
-                ", executable=" + (getExecutor() != null) +
                 "}";
+    }
+
+
+    public void addArgument(ParameterArgument arg) {
+        this.arguments.add(arg);
     }
 }

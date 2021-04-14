@@ -4,6 +4,7 @@ import com.shinybunny.hurricane.CommandExecutionContext;
 import com.shinybunny.hurricane.CommandRegisteringContext;
 import com.shinybunny.hurricane.tree.ParameterArgument;
 import com.shinybunny.hurricane.util.CommandRegisterFailedException;
+import com.shinybunny.hurricane.util.Utils;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -44,7 +45,16 @@ public @interface Options {
 
         @Override
         public void init(Options instance, ParameterArgument container, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
-
+            container.setSuggestionProvider((reader, suggestions, sender, arg) -> {
+                if (instance.value().length > 0) suggestions.suggest(instance.value());
+                else if (instance.byteValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.byteValues()));
+                else if (instance.intValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.intValues()));
+                else if (instance.doubleValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.doubleValues()));
+                else if (instance.floatValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.floatValues()));
+                else if (instance.longValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.longValues()));
+                else if (instance.shortValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.shortValues()));
+                else if (instance.charValues().length > 0) suggestions.suggest(Utils.toStringArr(instance.charValues()));
+            });
         }
 
         private <T> void checkValidity(T value, Object options, BiFunction<Object,Integer,T> getter) throws Exception {

@@ -18,20 +18,23 @@ import java.util.stream.Collectors;
  * You can create multiple instances of this class to have multiple different command systems.
  * <br/>
  * To register commands, call {@link #register(Object)} with a container class for multiple method commands,
- * or call {@link #register(CommandNode)} with a built command instance.
+ * or call {@link #register(CustomCommand)} with a built command instance.
  */
 public class Hurricane {
 
     private List<ParamAnnotationAdapter<?>> paramAnnotationAdapters = new ArrayList<>();
     private List<MethodAnnotationAdapter<?>> methodAnnotationAdapters = new ArrayList<>();
     private List<ArgumentAdapter<?>> argumentAdapters = new ArrayList<>();
-    private final CommandNode root = new CommandNode("");
 
     private boolean literalsIgnoreCase = true;
     private boolean allowMultiSpaces = true;
 
-    private Predicate<CommandNode> commandConsumer;
+    private Predicate<CustomCommand> commandConsumer;
     private Consumer<String> logger;
+
+    protected List<CustomCommand> registeredCommands = new ArrayList<>();
+
+    private String defaultNoPermsMessage;
 
     public Hurricane() {
         initDefaults();
@@ -64,9 +67,9 @@ public class Hurricane {
 
     /**
      * Sets a callback to when a new command has been registered to this API instance.
-     * @param consumer The callback, with the registered {@link CommandNode} as the parameter. Returning false will cancel the command registration.
+     * @param consumer The callback, with the registered {@link CustomCommand} as the parameter. Returning false will cancel the command registration.
      */
-    public void onCommandRegistered(Predicate<CommandNode> consumer) {
+    public void onCommandRegistered(Predicate<CustomCommand> consumer) {
         commandConsumer = consumer;
     }
 
@@ -106,18 +109,12 @@ public class Hurricane {
 
     protected MethodCommand createFromMethod(CommandRegisteringContext ctx, Method m, CommandContainer instance) {
         MethodCommand cmd = new MethodCommand(ctx,m,instance);
-        CommandNode node = cmd;
         for (int i = 0; i < m.getParameterCount(); i++) {
             Parameter p = m.getParameters()[i];
             ParameterArgument arg = new ParameterArgument(p,i);
             arg.postInit(ctx);
-            if (!arg.isRequired() || !arg.isSyntax()) {
-                node.setExecutor(cmd);
-            }
-            node.addChild(arg);
-            node = arg;
+            cmd.addArgument(arg);
         }
-        node.setExecutor(cmd);
         cmd.postInit(ctx);
         return cmd;
     }
@@ -155,12 +152,12 @@ public class Hurricane {
         }
     }
 
-    protected void createFromContainer(CommandContainer container, Consumer<CommandNode> consumer) {
+    protected void createFromContainer(CommandContainer container, Consumer<CustomCommand> consumer) {
         Class<?> cls = container.getContainingClass();
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(Command.class)) {
                 CommandRegisteringContext ctx = new CommandRegisteringContext(this,container,Utils.getName(m));
-                CommandNode cmd = createFromMethod(ctx,m,container);
+                CustomCommand cmd = createFromMethod(ctx,m,container);
                 if (!ctx.isCancelled()) {
                     consumer.accept(cmd);
                 }
@@ -180,30 +177,23 @@ public class Hurricane {
      *     If there is a {@link #onCommandRegistered(Predicate) command registered} consumer set,
      *     Will only register the command if that predicate returned <code>true</code>.
      * </p>
-     * @param cmd The root {@link CommandNode} of the command.
      */
-    public void register(CommandNode cmd) {
+    public void register(CustomCommand cmd) {
         if (commandConsumer == null || commandConsumer.test(cmd)) {
             log("Added command: " + cmd);
-            getRoot().addChild(cmd);
         }
     }
 
-    public CommandNode createTree(CommandContainer container, Command settings) {
+    public TreeCommand createTree(CommandContainer container, Command settings) {
         Class<?> cls = container.getContainingClass();
-        CommandNode cmd = new CommandNode(container.getName(settings));
+        TreeCommand cmd = new TreeCommand(container.getName(settings));
         cmd.setDescription(settings.desc());
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(Command.class)) {
                 CommandRegisteringContext ctx = new CommandRegisteringContext(this, container, Utils.getName(m));
-                CommandNode node = createFromMethod(ctx, m, container);
+                CustomCommand sc = createFromMethod(ctx, m, container);
                 if (!ctx.isCancelled()) {
-                    if (m.isAnnotationPresent(DefaultSubCommand.class)) {
-                        for (CommandNode gc : node.getChildren()) {
-                            cmd.addChild(gc);
-                        }
-                    }
-                    cmd.addChild(node);
+                    cmd.addSubCommand(sc);
                 }
                 ctx.printErrors();
             }
@@ -319,16 +309,28 @@ public class Hurricane {
      * Parses a command input, ran by the passed {@link CommandSender}.
      * @param sender The entity executing the command
      * @param input The command input
-     * @return An object representing the compiled parsing results, to be saved for later or passed to {@link #execute(ParseResult)}.
+     * @return An object representing the compiled parsing results, to be saved for later or passed to {@link #execute(CommandExecutionContext)}.
      */
-    public ParseResult parse(CommandSender sender, String input) {
+    public CommandExecutionContext parse(CommandSender sender, String input) throws CommandParsingException {
         log("parsing command: " + input);
         InputReader reader = new InputReader(input);
-        CommandExecutionContext ctx = new CommandExecutionContext(this,sender,reader,null);
-        return parseNodes(getRoot(), reader, ctx);
+        CommandExecutionContext ctx = new CommandExecutionContext(this,sender,reader);
+        for (CustomCommand cmd : registeredCommands) {
+            Optional<String> opt = reader.readOneOf(cmd.getAliases().toArray(new String[0]));
+            if (opt.isPresent()) {
+                if (cmd.canUse(sender)) {
+                    cmd.parse(reader, ctx);
+                    return ctx;
+                } else {
+                    throw new CommandParsingException(cmd.getNoPermsMessage());
+                }
+            }
+        }
+        throw new CommandParsingException("Unknown command /" + reader.readWord());
+        //return parseNodes(getRoot(), reader, ctx);
     }
 
-    private ParseResult parseNodes(CommandNode node, InputReader originalReader, CommandExecutionContext builder) {
+    /*private ParseResult parseNodes(CommandNode node, InputReader originalReader, CommandExecutionContext builder) {
         CommandSender sender = builder.getSender();
         Map<CommandNode, CommandParsingException> errors = null;
         List<ParseResult> potentials = null;
@@ -384,7 +386,7 @@ public class Hurricane {
             return potentials.get(0);
         }
         return new ParseResult(builder,originalReader,errors == null ? new HashMap<>() : errors);
-    }
+    }*/
 
     /**
      * Parses and executes a command input.
@@ -395,47 +397,36 @@ public class Hurricane {
      * @throws CommandFailedException When an <b>unexpected</b> error occurs while executing the command.
      */
     public CommandResult<?> execute(CommandSender sender, String input) throws CommandParsingException, CommandFailedException {
-        ParseResult res = parse(sender,input);
+        CommandExecutionContext res = parse(sender,input);
         return execute(res);
     }
 
     /**
-     * Executes a command from a {@link ParseResult} object.
-     * @param res The result object returned from {@link #parse(CommandSender, String)}
+     * Executes a command from a {@link CommandExecutionContext} object.
+     * @param ctx The context object returned from {@link #parse(CommandSender, String)}
      * @return A {@link CommandResult} with info about the results of running the command.
      * @throws CommandParsingException When the parse results have an error it will throw it
      * @throws CommandFailedException When an <b>unexpected</b> error occurs while executing the command.
      */
-    public CommandResult<?> execute(ParseResult res) throws CommandParsingException, CommandFailedException {
-        if (!res.getExceptions().isEmpty()) {
-            if (res.getExceptions().size() == 1) {
-                throw res.getExceptions().values().iterator().next(); // TODO: 19/01/2021 make a multi-error for multiple errors
-            } else {
-                throw new CommandParsingException("Unknown argument",res.getReader().markerHere());
-            }
+    public CommandResult<?> execute(CommandExecutionContext ctx) throws CommandParsingException, CommandFailedException {
+        log("executing command /" + ctx.getReader().getString());
+        if (ctx.getExecutor() != null) {
+            return ctx.getExecutor().execute(ctx);
         }
-        log("executing command /" + res.getReader().getString());
-        if (res.getContext().getExecutor() != null) {
-            return res.getContext().getExecutor().execute(res.getContext());
-        }
-        throw new CommandParsingException("Invalid command",res.getReader().markerSince(0));
+        throw new CommandParsingException("Invalid command",ctx.getReader().markerSince(0));
     }
 
-    public CommandNode getCommand(String name) {
-        for (CommandNode cmd : getCommands()) {
-            if (literalsEqual(cmd.getName(),name)) {
+    public CustomCommand getCommand(String name) {
+        for (CustomCommand cmd : getCommands()) {
+            if (cmd.nameMatches(name)) {
                 return cmd;
             }
         }
         return null;
     }
 
-    public List<CommandNode> getCommands() {
-        return getRoot().getChildren();
-    }
-
-    public CommandNode getRoot() {
-        return root;
+    public List<CustomCommand> getCommands() {
+        return registeredCommands;
     }
 
     public static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS = new HashMap<Class<?>, Class<?>>() {
@@ -459,5 +450,13 @@ public class Hurricane {
 
     public boolean literalsEqual(String a, String b) {
         return areLiteralsIgnoreCase() ? a.equalsIgnoreCase(b) : a.equals(b);
+    }
+
+    public String getDefaultNoPermsMessage() {
+        return defaultNoPermsMessage;
+    }
+
+    public void setDefaultNoPermsMessage(String defaultNoPermsMessage) {
+        this.defaultNoPermsMessage = defaultNoPermsMessage;
     }
 }
