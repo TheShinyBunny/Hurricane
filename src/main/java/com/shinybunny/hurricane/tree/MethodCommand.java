@@ -26,33 +26,16 @@ public class MethodCommand extends CustomCommand implements AnnotationAdapterCon
 
     private Method method;
     private CommandContainer container;
-    private List<MethodAnnotationAdapter> annotationAdapters;
-    private List<ParameterArgument> arguments;
 
     public MethodCommand(CommandRegisteringContext ctx, Method method, CommandContainer container) {
         super(Utils.getName(method));
         this.method = method;
         this.noPermsMessage = ctx.getApi().getDefaultNoPermsMessage();
         this.container = container;
-        this.arguments = new ArrayList<>();
         this.description = method.getAnnotation(Command.class).desc();
-        this.annotationAdapters = resolveAnnotationAdapters(ctx);
-        for (MethodAnnotationAdapter a : annotationAdapters) {
-            try {
-                a.init(method.getAnnotation(a.getType()),this,ctx);
-            } catch (CommandRegisterFailedException e) {
-                ctx.addError(e);
-            }
-        }
-    }
-
-    public void postInit(CommandRegisteringContext ctx) {
-        for (MethodAnnotationAdapter a : annotationAdapters) {
-            try {
-                a.postInit(method.getAnnotation(a.getType()),this,ctx);
-            } catch (CommandRegisterFailedException e) {
-                ctx.addError(e);
-            }
+        List<MethodAnnotationAdapter> adapters = resolveAnnotationAdapters(ctx);
+        for (MethodAnnotationAdapter a : adapters) {
+            addHook(a.convertToHook(getAnnotation(a.getType())));
         }
     }
 
@@ -108,23 +91,7 @@ public class MethodCommand extends CustomCommand implements AnnotationAdapterCon
 
     @Override
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
-        ctx.setExecutor(this);
-        if (reader.canRead()) {
-            if (ctx.getApi().isAllowMultiSpaces()) {
-                reader.skipSpace();
-            } else {
-                reader.expect(' ',"Expected a space to separate arguments!");
-            }
-        }
-        for (ParameterArgument a : arguments) {
-            a.parse(reader,ctx);
-            if (reader.canRead() && a.isSyntax() && a.needsSpaceAfter()) {
-                reader.expect(' ',"Expected a space to separate arguments!");
-                if (ctx.getApi().isAllowMultiSpaces()) {
-                    reader.skipSpace();
-                }
-            }
-        }
+        super.parse(reader, ctx);
     }
 
     @Override
@@ -141,11 +108,11 @@ public class MethodCommand extends CustomCommand implements AnnotationAdapterCon
             }
         }
         ctx.getApi().log("\trunning preExecute...");
-        for (MethodAnnotationAdapter a : annotationAdapters) {
+        for (CommandHook h : hooks) {
             try {
-                ctx.getApi().log("\t\t" + a);
+                ctx.getApi().log("\t\t" + h);
                 List<Object> tempArgs = new ArrayList<>(Arrays.asList(args));
-                a.preExecute(this, method.getAnnotation(a.getType()), tempArgs, ctx);
+                h.preExecute(this, tempArgs, ctx);
                 args = tempArgs.toArray();
             } catch (Exception e) {
                 return CommandResult.fail(e);
@@ -163,9 +130,9 @@ public class MethodCommand extends CustomCommand implements AnnotationAdapterCon
         }
         CommandResult<Object> result = CommandResult.from(ret);
         ctx.getApi().log("\trunning postExecute...");
-        for (MethodAnnotationAdapter a : annotationAdapters) {
-            ctx.getApi().log("\t\t" + a);
-            a.postExecute(this,method.getAnnotation(a.getType()),result,ctx);
+        for (CommandHook h : hooks) {
+            ctx.getApi().log("\t\t" + h);
+            h.postExecute(this,result,ctx);
         }
         ctx.getApi().log("\tdone!");
         return result;
@@ -188,7 +155,4 @@ public class MethodCommand extends CustomCommand implements AnnotationAdapterCon
     }
 
 
-    public void addArgument(ParameterArgument arg) {
-        this.arguments.add(arg);
-    }
 }

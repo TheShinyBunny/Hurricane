@@ -17,7 +17,7 @@ public interface ArgumentAdapter<T> extends SuggestionProvider {
     Class<T> getType();
 
     default boolean canApply(Argument arg, CommandRegisteringContext ctx) {
-        return arg.instanceOf(getType());
+        return arg.typeExtends(getType());
     }
 
     void init(Argument container, CommandRegisteringContext ctx);

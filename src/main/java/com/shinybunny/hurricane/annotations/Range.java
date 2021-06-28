@@ -40,7 +40,7 @@ public @interface Range {
 
         @Override
         public boolean canApply(Range instance, ParameterArgument container, CommandRegisteringContext ctx) {
-            return container.instanceOf(Number.class);
+            return container.typeExtends(Number.class);
         }
 
         @Override

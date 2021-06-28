@@ -28,9 +28,4 @@ public class CommandParsingException extends Exception {
         return marker;
     }
 
-    @Override
-    public String getMessage() {
-        if (marker == null) return super.getMessage();
-        return super.getMessage() + "\nat: " + marker.toString();
-    }
 }

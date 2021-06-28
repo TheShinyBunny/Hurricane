@@ -5,6 +5,7 @@ import com.shinybunny.hurricane.arguments.ArgumentAdapter;
 import com.shinybunny.hurricane.util.*;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 /**
  * A class representing an argument in a command.
@@ -32,6 +33,10 @@ public class Argument extends CustomDataHolder {
         this.name = name;
         this.type = Hurricane.getPrimitiveWrapper(type);
         this.typeHint = type.getSimpleName();
+    }
+
+    public static Argument of(String name, Class<?> type) {
+        return new Argument(name, type);
     }
 
     /**
@@ -77,20 +82,35 @@ public class Argument extends CustomDataHolder {
         this.name = name;
     }
 
+
+    /**
+     * Gets the name of this argument. This name is mainly used when providing error messages, when the input is invalid.
+     * <br>
+     * Parameter arguments use the parameter's name by default, and this can be modified using the builtin {@link com.shinybunny.hurricane.annotations.Arg} annotation.
+     */
     public String getName() {
         return name;
     }
 
-    public void setDescription(String description) {
+    /**
+     * Changes the description of the argument
+     * @param description The new description
+     */
+    public Argument description(String description) {
         this.description = description;
+        return this;
     }
 
+    /**
+     * Gets the description of this argument. Can be used for providing command help.
+     */
     public String getDescription() {
         return description;
     }
 
-    public void setTypeHint(String typeHint) {
+    public Argument typeHint(String typeHint) {
         this.typeHint = typeHint;
+        return this;
     }
 
     public String getTypeHint() {
@@ -131,8 +151,17 @@ public class Argument extends CustomDataHolder {
      * @param cls The other class in question
      * @return The result of <code>cls.</code>{@link Class#isAssignableFrom(Class) isAssignableFrom}<code>(this.type)</code>
      */
-    public boolean instanceOf(Class<?> cls) {
+    public boolean typeExtends(Class<?> cls) {
         return cls.isAssignableFrom(type);
+    }
+
+    /**
+     * Checks whether the given class is the same as or a subclass of the argument's type.
+     * @param cls The other class in question
+     * @return The result of <code>this.type.</code>{@link Class#isAssignableFrom(Class) isAssignableFrom}<code>(cls)</code>
+     */
+    public boolean typeExtendedBy(Class<?> cls) {
+        return type.isAssignableFrom(cls);
     }
 
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
@@ -217,6 +246,12 @@ public class Argument extends CustomDataHolder {
         if (suggestionProvider != null) {
             suggestionProvider.suggest(reader, suggestions, sender, this);
         }
+    }
+
+    public List<String> getSuggestions(InputReader reader, CommandSender sender) {
+        SuggestionConsumer consumer = new SuggestionConsumer();
+        suggest(reader,consumer,sender);
+        return consumer.getResult();
     }
 
     public void setNeedsSpaceAfter(boolean needsSpaceAfter) {

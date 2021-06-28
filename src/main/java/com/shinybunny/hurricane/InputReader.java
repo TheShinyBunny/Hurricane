@@ -2,6 +2,7 @@ package com.shinybunny.hurricane;
 
 import com.shinybunny.hurricane.util.CommandParsingException;
 import com.shinybunny.hurricane.util.InvalidNumberException;
+import org.intellij.lang.annotations.RegExp;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -110,7 +111,7 @@ public class InputReader {
         return false;
     }
 
-    public String readPattern(String regex) {
+    public String readPattern(@RegExp String regex) {
         String str = "";
         while (canRead()) {
             String curr = str + peek();
@@ -125,14 +126,18 @@ public class InputReader {
     public String readQuotableString() {
         if (peek() == '"') {
             next();
-            return readUntil('"');
+            return readUntil('"','\\');
         }
         return readWord();
     }
 
     public char peek() {
-        if (!canRead()) return 0;
-        return input.charAt(pos);
+        return peek(0);
+    }
+
+    public char peek(int steps) {
+        if (!canRead(steps + 1)) return 0;
+        return input.charAt(pos + steps);
     }
 
     public char next() {
@@ -147,16 +152,19 @@ public class InputReader {
         return pos + steps <= input.length();
     }
 
-    public String readUntil(char c) {
+    public String readUntil(char c, char escapeChar) {
         String s = "";
-        while (canRead() && peek() != c) {
+        while (canRead()) {
+            if (peek() == escapeChar) {
+                next();
+            } else if (peek() == c) break;
             s += next();
         }
         return s;
     }
 
     public String readWord() {
-        return readUntil(' ');
+        return readUntil(' ', (char) 0);
     }
 
     public void skipSpace() {
@@ -207,5 +215,33 @@ public class InputReader {
         } else {
             throw new CommandParsingException(msg,markerHere());
         }
+    }
+
+    public Number readAnyNumber() throws InvalidNumberException {
+        try {
+            return readByte();
+        } catch (InvalidNumberException e) {
+            try {
+                return readShort();
+            } catch (InvalidNumberException e2) {
+                try {
+                    return readInteger();
+                } catch (InvalidNumberException e3) {
+                    try {
+                        return readLong();
+                    } catch (InvalidNumberException e4) {
+                        try {
+                            return readDouble();
+                        } catch (InvalidNumberException e5) {
+                            return readFloat();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public String readIdentifier() {
+        return readPattern("\\w+");
     }
 }

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * To register commands, call {@link #register(Object)} with a container class for multiple method commands,
  * or call {@link #register(CustomCommand)} with a built command instance.
  */
-public class Hurricane {
+public class Hurricane extends CustomDataHolder {
 
     private List<ParamAnnotationAdapter<?>> paramAnnotationAdapters = new ArrayList<>();
     private List<MethodAnnotationAdapter<?>> methodAnnotationAdapters = new ArrayList<>();
@@ -115,7 +115,6 @@ public class Hurricane {
             arg.postInit(ctx);
             cmd.addArgument(arg);
         }
-        cmd.postInit(ctx);
         return cmd;
     }
 
@@ -148,28 +147,27 @@ public class Hurricane {
         if (cls.isAnnotationPresent(Command.class)) {
             register(createTree(c,cls.getAnnotation(Command.class)));
         } else {
-            createFromContainer(c,this::register);
+            createFromContainer(c);
         }
     }
 
-    protected void createFromContainer(CommandContainer container, Consumer<CustomCommand> consumer) {
+    protected void createFromContainer(CommandContainer container) {
         Class<?> cls = container.getContainingClass();
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(Command.class)) {
                 CommandRegisteringContext ctx = new CommandRegisteringContext(this,container,Utils.getName(m));
                 CustomCommand cmd = createFromMethod(ctx,m,container);
-                if (!ctx.isCancelled()) {
-                    consumer.accept(cmd);
-                }
-                ctx.printErrors();
+                register(cmd,ctx);
             }
         }
         for (Class<?> sc : cls.getDeclaredClasses()) {
             if (sc.isAnnotationPresent(Command.class)) {
-                consumer.accept(createTree(new CommandContainer(this,sc),sc.getAnnotation(Command.class)));
+                register(createTree(new CommandContainer(this,sc),sc.getAnnotation(Command.class)));
             }
         }
     }
+
+
 
     /**
      * Registers a single command to the command tree.
@@ -179,23 +177,40 @@ public class Hurricane {
      * </p>
      */
     public void register(CustomCommand cmd) {
-        if (commandConsumer == null || commandConsumer.test(cmd)) {
-            log("Added command: " + cmd);
+        register(cmd,new CommandRegisteringContext(this,null,cmd.getName()));
+    }
+
+    public void register(CustomCommand cmd, CommandRegisteringContext ctx) {
+        cmd.onRegister(ctx);
+        ctx.printErrors();
+        if (!ctx.isCancelled()) {
+            if (commandConsumer == null || commandConsumer.test(cmd)) {
+                log("Added command: " + cmd);
+                registeredCommands.add(cmd);
+            }
         }
+    }
+
+    public <T extends CustomCommand> T register(CommandBuilder<T> builder) {
+        CommandRegisteringContext ctx = new CommandRegisteringContext(this,null,builder.getName());
+        T cmd = builder.build(ctx);
+        register(cmd,ctx);
+        return cmd;
     }
 
     public TreeCommand createTree(CommandContainer container, Command settings) {
         Class<?> cls = container.getContainingClass();
         TreeCommand cmd = new TreeCommand(container.getName(settings));
-        cmd.setDescription(settings.desc());
+        cmd.description(settings.desc());
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(Command.class)) {
                 CommandRegisteringContext ctx = new CommandRegisteringContext(this, container, Utils.getName(m));
                 CustomCommand sc = createFromMethod(ctx, m, container);
+                sc.onRegister(ctx);
+                ctx.printErrors();
                 if (!ctx.isCancelled()) {
                     cmd.addSubCommand(sc);
                 }
-                ctx.printErrors();
             }
         }
         return cmd;
@@ -316,7 +331,8 @@ public class Hurricane {
         InputReader reader = new InputReader(input);
         CommandExecutionContext ctx = new CommandExecutionContext(this,sender,reader);
         for (CustomCommand cmd : registeredCommands) {
-            Optional<String> opt = reader.readOneOf(cmd.getAliases().toArray(new String[0]));
+            Optional<String> opt = reader.readOneOf(cmd.getNames().toArray(new String[0]));
+            if (reader.canRead() && reader.peek() != ' ') continue;
             if (opt.isPresent()) {
                 if (cmd.canUse(sender)) {
                     cmd.parse(reader, ctx);
@@ -456,6 +472,10 @@ public class Hurricane {
         return defaultNoPermsMessage;
     }
 
+    /**
+     * Changes the default message sent when the {@link CommandSender} has no permissions to execute the command he was attempting to run.
+     * @param defaultNoPermsMessage The message to be used.
+     */
     public void setDefaultNoPermsMessage(String defaultNoPermsMessage) {
         this.defaultNoPermsMessage = defaultNoPermsMessage;
     }

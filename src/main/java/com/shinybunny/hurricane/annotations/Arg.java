@@ -41,7 +41,7 @@ public @interface Arg {
         public void init(Arg instance, ParameterArgument container, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
             container.setName(instance.value());
             if (!instance.desc().isEmpty()) {
-                container.setDescription(instance.desc());
+                container.description(instance.desc());
             }
             if (instance.optional()) {
                 container.setRequired(false);

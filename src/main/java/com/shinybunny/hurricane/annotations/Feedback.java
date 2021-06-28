@@ -13,13 +13,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Method commands annotated with Feedback will send a response message when the command was successful or when it failed, using the provided strings.
+ * Method commands annotated with Feedback will send a response message when the command was successful or when it failed,
+ * using the provided <code>success</code> and <code>failed</code> fields.
  * <p>
- *     Both strings can use values of the command's arguments, using ${arg} with the argument name.
- *     Additionally, the argument name may be followed by an access chain, in the format of <code>${arg.field.getMethod()}</code>.
+ *     Both strings can use {@link com.shinybunny.hurricane.util.AccessExpression}s inside with <code>${expression}</code>.
  *     <br/>
- *     If the command returned a value other than a boolean, a string or a {@link CommandResult}, the returned value can be used in the success message with <code>${#value}</code>.
- *     An access chain can be used there as well.
+ *     If the command returned a value other than a boolean or a string, the returned value can be used in the success message with <code>${result}</code>.
+ *     An access expression can be used there as well.
  * </p>
  */
 @Target(ElementType.METHOD)
@@ -29,13 +29,13 @@ public @interface Feedback {
 
     /**
      * A success message to send to the executor when the command completed successfully.
-     * A successful command is a command that did not end with an exception and did not return <code>false</code>.
+     * A successful command is a command that did not end by an exception and did not return <code>false</code>.
      */
     String success() default "";
 
     /**
      * A failure message to send to the executor when the command failed.
-     * A command fails when it ended with an exception or returned <code>false</code>.
+     * A command fails when it threw an exception or returned <code>false</code>.
      */
     String fail() default "";
 
@@ -56,7 +56,7 @@ public @interface Feedback {
                 msg = annotation.fail();
             }
             if (msg.isEmpty()) return;
-            msg = formatMessage(msg,ctx,result);
+            msg = formatMessage(msg,ctx,result.getResult());
             ctx.getSender().sendFeedback(result.isSuccessful(),msg);
         }
 

@@ -1,6 +1,7 @@
 package com.shinybunny.hurricane.annotations;
 
 import com.shinybunny.hurricane.*;
+import com.shinybunny.hurricane.tree.CustomCommand;
 import com.shinybunny.hurricane.tree.MethodCommand;
 import com.shinybunny.hurricane.util.CommandFailedException;
 import com.shinybunny.hurricane.util.CommandRegisterFailedException;
@@ -21,7 +22,23 @@ public interface MethodAnnotationAdapter<A extends Annotation> extends Annotatio
 
     void postExecute(MethodCommand cmd, A annotation, CommandResult<?> result, CommandExecutionContext ctx);
 
-    default void postInit(A annotation, MethodCommand cmd, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
+    default CommandHook convertToHook(A annotation) {
+        return new CommandHook() {
+            @Override
+            public void onRegistered(CustomCommand cmd, CommandRegisteringContext ctx) throws CommandRegisterFailedException {
+                init(annotation, (MethodCommand) cmd,ctx);
+            }
 
+            @Override
+            public void preExecute(CustomCommand cmd, List<Object> args, CommandExecutionContext ctx) throws CommandFailedException {
+                MethodAnnotationAdapter.this.preExecute((MethodCommand) cmd,annotation,args,ctx);
+            }
+
+            @Override
+            public void postExecute(CustomCommand cmd, CommandResult<?> result, CommandExecutionContext ctx) {
+                MethodAnnotationAdapter.this.postExecute((MethodCommand) cmd,annotation,result,ctx);
+            }
+        };
     }
+
 }

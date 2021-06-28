@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * An object to collect custom suggestions for argument values.
+ */
 public class SuggestionConsumer {
 
     private List<String> suggestions;

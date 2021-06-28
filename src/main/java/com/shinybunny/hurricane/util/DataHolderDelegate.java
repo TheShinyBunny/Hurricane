@@ -1,7 +1,5 @@
 package com.shinybunny.hurricane.util;
 
-import com.shinybunny.hurricane.Key;
-
 import java.util.Optional;
 
 public interface DataHolderDelegate {
