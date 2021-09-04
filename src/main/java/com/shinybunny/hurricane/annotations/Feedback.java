@@ -17,10 +17,9 @@ import java.util.regex.Pattern;
  * using the provided <code>success</code> and <code>failed</code> fields.
  * <p>
  *     Both strings can use {@link com.shinybunny.hurricane.util.AccessExpression}s inside with <code>${expression}</code>.
- *     <br/>
+ *     <p>
  *     If the command returned a value other than a boolean or a string, the returned value can be used in the success message with <code>${result}</code>.
  *     An access expression can be used there as well.
- * </p>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

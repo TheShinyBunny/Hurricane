@@ -38,7 +38,6 @@ import java.util.Optional;
  *     </ul>
  *
  *     You cannot declare any temporary variables or have any operator expressions (because that'd be too complicated to parse).
- * </p>
  */
 public class AccessExpression {
 

@@ -54,6 +54,10 @@ public abstract class CustomCommand extends CustomDataHolder implements CommandE
         return hooks;
     }
 
+    public <H extends CommandHook> H getHookByType(Class<H> type) {
+        return (H) hooks.stream().filter(type::isInstance).findFirst().orElse(null);
+    }
+
     public void addAlias(String alias) {
         this.aliases.add(alias);
     }

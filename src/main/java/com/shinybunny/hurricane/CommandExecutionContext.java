@@ -41,6 +41,13 @@ public class CommandExecutionContext extends CustomDataHolder {
         return Optional.ofNullable(arguments.get(name));
     }
 
+    public <T> T get(String name, Class<T> type) {
+        return getArg(name)
+                .filter(a->a.getArgument().typeExtends(type))
+                .map(a->(T)a.getValue())
+                .orElseThrow(()->new RuntimeException("No argument found named '" + name + "' of type " + type.getSimpleName()));
+    }
+
     public CommandExecutionContext copy() {
         CommandExecutionContext ctx = new CommandExecutionContext(api, sender, reader);
         ctx.arguments = new HashMap<>(arguments);

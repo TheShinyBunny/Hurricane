@@ -14,11 +14,11 @@ import java.util.List;
 
 /**
  * A class representing a registered command that was interpreted from a method declaration.
- * <br/>
+ * <p>
  * Method commands are created when registering a holder class through {@link Hurricane#register(Object)}.
  * Each method inside the provided class, if it has the {@link Command} annotation, is translated to a new instance of a <code>MethodCommand</code>.
  * The method's parameters are all translated to {@link ParameterArgument}s, and a command structure is automatically built from that.
- * <br/>
+ * <p>
  * Method commands can be annotated with custom annotations, to modify the registration and execution processes of the command.
  * To define a custom handler for a custom method annotation, implement the {@link MethodAnnotationAdapter}.
  */

@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Represents an {@link Argument} created from a method {@link Parameter}.
- * <br/>
+ * <p>
  * Parameter arguments are different from normal arguments as they can use custom annotations.
  * Each annotation attached to the parameter uses a registered {@link ParamAnnotationAdapter} from the {@link Hurricane}.
  * These adapters can listen to the annotation being attached to a ParameterArgument, and modify the argument's behavior.
@@ -59,6 +59,7 @@ public class ParameterArgument extends Argument implements AnnotationAdapterCont
 
     @Override
     public void validate(Object obj, CommandExecutionContext ctx) throws Exception {
+        super.validate(obj,ctx);
         for (ParamAnnotationAdapter a : annotationAdapters) {
             a.validate(obj,getAnnotation(a),this,ctx);
         }

@@ -7,6 +7,9 @@
     <groupId>com.shinybunny</groupId>
     <artifactId>hurricane</artifactId>
     <version>1.0</version>
+    <packaging>jar</packaging>
+    <description>A powerful system of creating a custom command handler using Java methods</description>
+    <url>https://github.com/TheShinyBunny/Hurricane</url>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -22,7 +25,19 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -39,5 +54,14 @@
             <version>20.1.0</version>
         </dependency>
     </dependencies>
-    
+
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>a0vy3ogzmztur-artifactory-primary-0-releases</name>
+            <url>https://shinybunny.jfrog.io/artifactory/default-maven-virtual</url>
+        </repository>
+    </distributionManagement>
+
+
 </project>

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * The main Hurricane API instance. This is a common class storing all commands and all type adapters, serving as a command system.
  * You can create multiple instances of this class to have multiple different command systems.
- * <br/>
+ * <p>
  * To register commands, call {@link #register(Object)} with a container class for multiple method commands,
  * or call {@link #register(CustomCommand)} with a built command instance.
  */

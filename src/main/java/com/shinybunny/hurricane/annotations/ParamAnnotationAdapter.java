@@ -9,7 +9,7 @@ import java.lang.annotation.Annotation;
 /**
  * An {@link AnnotationAdapter} for annotations declared on {@link ParameterArgument parameters in commands}.
  * This adapter can modify the value of the parsed argument, or modify the argument's settings.
- * <br/>
+ * <p>
  * Custom ParamAnnotationAdapters can be registered to an API with {@link Hurricane#addParamAnnotationAdapter(ParamAnnotationAdapter)},
  * or simply with the {@link Adapter} annotation.
  * @param <A> The type of annotation

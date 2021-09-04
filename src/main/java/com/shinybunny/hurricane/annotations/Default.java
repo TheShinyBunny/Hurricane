@@ -41,7 +41,7 @@ public @interface Default {
 
     /**
      * A string representing the call path to a field of another argument to use as the value.
-     * <br/>
+     * <p>
      * For example, here is a command implementation of the {@link String#substring(int) String.substring()} method
      * <pre>
      * &#64;Command

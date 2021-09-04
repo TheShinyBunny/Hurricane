@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 /**
  * This annotation should be used on any method that should be registered as a command inside of a command container.
  * Any other method without this annotation will not be interpreted as a command in the API.
- * <br/>
+ * <p>
  * This annotation can be used inside command containers to mark an inner class as a tree command (see {@link Hurricane#register(Object)}
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -20,7 +20,7 @@ public @interface Command {
 
     /**
      * An alternative name for the command.
-     * <br/>
+     * <p>
      * When absent or empty:
      * <ul>
      *     <li>If the target element is a method, will use the method's name.</li>

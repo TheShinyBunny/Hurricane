@@ -9,10 +9,10 @@ import java.util.List;
 
 /**
  * A class representing an argument in a command.
- * <br/><br/>
+ * <p>
  * An argument can be either syntax or non-syntax.
  * Syntax arguments are parsed from the command's input, to translate the input string into the type of the argument.
- * <br/>
+ * <p>
  * Non-Syntax are used mainly for {@link MethodCommand}s, for additional parameters in a method that do not take part of the input parsing,
  * and are just a convenient way to pass data to the command implementation such as the {@link CommandSender sender}, the original input, the {@link CommandExecutionContext execution context}, etc.
  *
@@ -164,6 +164,11 @@ public class Argument extends CustomDataHolder {
         return type.isAssignableFrom(cls);
     }
 
+    /**
+     * Parses this argument from the command input.
+     * If this argument is not part of the syntax, resolves the value from the context.
+     * Either way, we also validate the value against the annotations
+     */
     public void parse(InputReader reader, CommandExecutionContext ctx) throws CommandParsingException {
         ctx.getApi().log("parsing argument " + this + " starting with: " + reader.peek());
         Object obj = null;
@@ -200,7 +205,9 @@ public class Argument extends CustomDataHolder {
     }
 
     public void validate(Object obj, CommandExecutionContext ctx) throws Exception {
-
+        if (!type.isInstance(obj)) {
+            throw new Exception("Argument " + name + " must be of type " + type.getSimpleName());
+        }
     }
 
     public Object getDefault(CommandExecutionContext ctx) throws Exception {
