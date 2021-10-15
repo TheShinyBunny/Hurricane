@@ -138,4 +138,8 @@ public abstract class CustomCommand extends CustomDataHolder implements CommandE
     public boolean hasSyntaxArgs() {
         return arguments.stream().anyMatch(Argument::isSyntax);
     }
+
+    public boolean hasRequiredArgs() {
+        return arguments.stream().anyMatch(a -> a.isRequired() && a.isSyntax());
+    }
 }
